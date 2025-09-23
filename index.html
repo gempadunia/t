@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info Gempa Bumi</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- LeafletJS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     
+    <!-- html2canvas for saving as image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* Custom font and base styling */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* Latar belakang putih datar */
+        }
+        /* Mengembalikan tinggi peta ke ukuran semula */
+        #map { height: 400px; } 
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen py-8 px-4">
+
+    <!-- ======================================================= -->
+    <!-- PAGE 1: FORM INPUT                                      -->
+    <!-- ======================================================= -->
+    <div id="page1" class="w-full max-w-lg mx-auto">
+        <div class="bg-white p-8 rounded-2xl shadow-xl">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Masukkan Detail Gempabumi</h1>
+            <form id="gempaForm">
+                <div class="space-y-4">
+                    <div>
+                        <label for="magnitude" class="block text-sm font-medium text-gray-700">Kekuatan (Magnitudo)</label>
+                        <input type="number" step="0.1" id="magnitude" name="magnitude" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 5.4">
+                    </div>
+                    <div>
+                        <label for="kedalaman" class="block text-sm font-medium text-gray-700">Kedalaman (km)</label>
+                        <input type="number" id="kedalaman" name="kedalaman" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 10">
+                    </div>
+                    <div>
+                        <label for="waktu" class="block text-sm font-medium text-gray-700">Waktu Terjadinya</label>
+                        <input type="datetime-local" id="waktu" name="waktu" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="lokasi" class="block text-sm font-medium text-gray-700">Lokasi (Latitude, Longitude)</label>
+                        <input type="text" id="lokasi" name="lokasi" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 3.10, 117.63">
+                    </div>
+                    <div>
+                        <label for="detailLokasi" class="block text-sm font-medium text-gray-700">Detail Lokasi</label>
+                        <input type="text" id="detailLokasi" name="detailLokasi" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 28 km Tenggara TARAKAN-KALTARA">
+                    </div>
+                    <div>
+                        <label for="tsunami" class="block text-sm font-medium text-gray-700">Potensi Tsunami</label>
+                        <select id="tsunami" name="tsunami" class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option>Tidak Berpotensi Tsunami</option>
+                            <option>Berpotensi Tsunami</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="guncangan" class="block text-sm font-medium text-gray-700">Guncangan (Skala MMI)</label>
+                        <select id="guncangan" name="guncangan" class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option>I</option>
+                            <option>II-III</option>
+                            <option>IV</option>
+                            <option>V</option>
+                            <option>VI</option>
+                            <option>VII</option>
+                            <option>VIII</option>
+                            <option>IX</option>
+                            <option>X+</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Submit Informasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- PAGE 2: DISPLAY INFO                                    -->
+    <!-- ======================================================= -->
+    <div id="page2" class="hidden w-full max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- This is the container that will be saved as an image -->
+            <div id="report-container" class="bg-white p-4 sm:p-6">
+                <header class="text-center mb-4">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Info Gempabumi</h2>
+                    <p class="text-sm sm:text-base text-gray-500">Stasiun Geofisika Balikpapan</p>
+                </header>
+                
+                <div id="map" class="w-full rounded-lg border border-gray-200 shadow-inner"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <!-- Magnitude Section -->
+                    <div id="magnitude-container" class="md:col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center">
+                        <h3 class="font-bold text-lg uppercase tracking-wider">Magnitudo</h3>
+                        <p id="display-magnitude" class="text-7xl font-black">2.1</p>
+                    </div>
+                    
+                    <!-- Details Section -->
+                    <div class="md:col-span-2 space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                             <div class="flex items-start space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Waktu</h4>
+                                    <p id="display-waktu" class="text-gray-600"></p>
+                                </div>
+                            </div>
+                             <div class="flex items-start space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 12.343l-3.535 3.536m-2.829-2.829l-3.535 3.536m-2.121-2.121L3 17.25m18-10.5L3 6.75m18 0l-3.535 3.536" /></svg>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Kedalaman</h4>
+                                    <p id="display-kedalaman" class="text-gray-600"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Lokasi</h4>
+                                    <p id="display-koordinat" class="text-gray-600"></p>
+                                    <p id="display-detailLokasi" class="text-gray-600 font-semibold"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Guncangan</h4>
+                                    <p id="display-guncangan-estimasi" class="text-gray-600 font-semibold"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-3 border-t mt-4">
+                           <p id="display-tsunami" class="w-full font-bold text-3xl p-3 rounded-lg text-center"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+            <button id="save-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                Simpan sebagai JPG
+            </button>
+            <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                Kembali ke Form
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // === ELEMENT SELECTORS ===
+            const page1 = document.getElementById('page1');
+            const page2 = document.getElementById('page2');
+            const gempaForm = document.getElementById('gempaForm');
+            const saveBtn = document.getElementById('save-btn');
+            const backBtn = document.getElementById('back-btn');
+
+            // === INITIALIZE MAP & MARKER ===
+            const map = L.map('map').setView([-2.548926, 118.0148634], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+            let marker = L.marker([0, 0]).addTo(map);
+            let circle = L.circle([0, 0], { radius: 20000, color: 'red', fillColor: '#f03', fillOpacity: 0.3 }).addTo(map);
+
+            // === COLOR MAPPING FOR MMI SCALE ===
+            const guncanganColors = {
+                'I':      { bg: 'bg-white',       text: 'text-black' },
+                'II-III': { bg: 'bg-blue-800',    text: 'text-white' },
+                'IV':     { bg: 'bg-cyan-400',    text: 'text-black' },
+                'V':      { bg: 'bg-green-200',   text: 'text-black' },
+                'VI':     { bg: 'bg-yellow-400',  text: 'text-black' },
+                'VII':    { bg: 'bg-orange-300',  text: 'text-black' },
+                'VIII':   { bg: 'bg-orange-500',  text: 'text-white' },
+                'IX':     { bg: 'bg-red-600',     text: 'text-white' },
+                'X+':     { bg: 'bg-red-800',     text: 'text-white' },
+            };
+
+            // === HELPER FUNCTION: FORMAT DATE ===
+            function formatWaktu(waktuISO) {
+                const date = new Date(waktuISO);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds} WIB`;
+            }
+
+            // === EVENT LISTENER: FORM SUBMIT ===
+            gempaForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(gempaForm);
+                const data = Object.fromEntries(formData.entries());
+                
+                const [lat, lng] = data.lokasi.split(',').map(coord => parseFloat(coord.trim()));
+
+                // Update UI elements
+                document.getElementById('display-magnitude').textContent = parseFloat(data.magnitude).toFixed(1);
+                document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
+                document.getElementById('display-waktu').textContent = formatWaktu(data.waktu);
+                document.getElementById('display-koordinat').textContent = `${Math.abs(lat)} ${lat >= 0 ? 'LU' : 'LS'}, ${Math.abs(lng)} ${lng >= 0 ? 'BT' : 'BB'}`;
+                document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
+                document.getElementById('display-guncangan-estimasi').textContent = `Estimasi Guncangan : ${data.guncangan} MMI`;
+
+                // Update Tsunami Display
+                const tsunamiDisplay = document.getElementById('display-tsunami');
+                tsunamiDisplay.textContent = data.tsunami;
+                tsunamiDisplay.classList.remove('bg-green-200', 'text-black', 'bg-red-800', 'text-white');
+                if (data.tsunami === 'Berpotensi Tsunami') {
+                    tsunamiDisplay.classList.add('bg-red-800', 'text-white');
+                } else {
+                    tsunamiDisplay.classList.add('bg-green-200', 'text-black');
+                }
+                
+                // Update Magnitude Color
+                const magnitudeContainer = document.getElementById('magnitude-container');
+                const colors = guncanganColors[data.guncangan] || guncanganColors['IX'];
+                Object.values(guncanganColors).forEach(c => magnitudeContainer.classList.remove(c.bg, c.text));
+                magnitudeContainer.classList.add(colors.bg, colors.text);
+                magnitudeContainer.querySelectorAll('h3, p').forEach(el => {
+                    Object.values(guncanganColors).forEach(c => el.classList.remove(c.text));
+                    el.classList.add(colors.text);
+                });
+
+                // Update Map
+                const newLatLng = [lat, lng];
+                map.setView(newLatLng, 9);
+                marker.setLatLng(newLatLng);
+                circle.setLatLng(newLatLng);
+
+                // Switch Pages
+                page1.classList.add('hidden');
+                page2.classList.remove('hidden');
+                
+                setTimeout(() => map.invalidateSize(), 10);
+            });
+
+            // === EVENT LISTENER: SAVE AS JPG ===
+            saveBtn.addEventListener('click', function() {
+                const reportElement = document.getElementById('report-container');
+                html2canvas(reportElement, { useCORS: true, scale: 2 }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'info-gempabumi.jpg';
+                    link.href = canvas.toDataURL('image/jpeg');
+                    link.click();
+                });
+            });
+
+            // === EVENT LISTENER: BACK TO FORM ===
+            backBtn.addEventListener('click', function() {
+                page2.classList.add('hidden');
+                page1.classList.remove('hidden');
+            });
+        });
+    </script>
+
+</body>
+</html>
+
