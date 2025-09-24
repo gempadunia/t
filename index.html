@@ -9,12 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- LeafletJS for Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
      
     <!-- html2canvas for saving as image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -24,95 +20,81 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #ffffff; /* Latar belakang putih datar */
+            background-color: #ffffff;
         }
-        /* Mengembalikan tinggi peta ke ukuran semula */
         #map { height: 400px; } 
+
+        /* Custom styles for form elements for consistency */
+        .form-label {
+            @apply block text-sm font-medium text-gray-700;
+        }
+        .form-input, .form-select {
+            @apply mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen py-8 px-4">
 
-    <!-- ======================================================= -->
-    <!-- PAGE 1: FORM INPUT                                      -->
-    <!-- ======================================================= -->
     <div id="page1" class="w-full max-w-lg mx-auto">
         <div class="bg-white p-8 rounded-2xl shadow-xl">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Masukkan Detail Gempabumi</h1>
             <form id="gempaForm">
                 <div class="space-y-4">
                     <div>
-                        <label for="magnitude" class="block text-sm font-medium text-gray-700">Kekuatan (Magnitudo)</label>
-                        <input type="number" step="0.1" id="magnitude" name="magnitude" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 5.4">
+                        <label for="magnitude" class="form-label">Kekuatan (Magnitudo)</label>
+                        <input type="number" step="0.1" id="magnitude" name="magnitude" required class="form-input" placeholder="Contoh: 5.4">
                     </div>
                     <div>
-                        <label for="kedalaman" class="block text-sm font-medium text-gray-700">Kedalaman (km)</label>
-                        <input type="number" id="kedalaman" name="kedalaman" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 10">
+                        <label for="kedalaman" class="form-label">Kedalaman (km)</label>
+                        <input type="number" id="kedalaman" name="kedalaman" required class="form-input" placeholder="Contoh: 10">
                     </div>
                     <div>
-                        <label for="waktu" class="block text-sm font-medium text-gray-700">Waktu Terjadinya</label>
-                        <input type="datetime-local" id="waktu" name="waktu" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <label for="waktu" class="form-label">Waktu Terjadinya</label>
+                        <input type="datetime-local" id="waktu" name="waktu" required step="1" class="form-input">
                     </div>
                     <div>
-                        <label for="lokasi" class="block text-sm font-medium text-gray-700">Lokasi (Latitude, Longitude)</label>
-                        <input type="text" id="lokasi" name="lokasi" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 3.10, 117.63">
+                        <label for="lokasi" class="form-label">Lokasi (Latitude, Longitude)</label>
+                        <input type="text" id="lokasi" name="lokasi" required class="form-input" placeholder="Contoh: 3.10, 117.63">
                     </div>
                     <div>
-                        <label for="detailLokasi" class="block text-sm font-medium text-gray-700">Detail Lokasi</label>
-                        <input type="text" id="detailLokasi" name="detailLokasi" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 28 km Tenggara TARAKAN-KALTARA">
+                        <label for="detailLokasi" class="form-label">Detail Lokasi</label>
+                        <input type="text" id="detailLokasi" name="detailLokasi" required class="form-input" placeholder="Contoh: 28 km Tenggara TARAKAN-KALTARA">
                     </div>
                     <div>
-                        <label for="tsunami" class="block text-sm font-medium text-gray-700">Potensi Tsunami</label>
-                        <select id="tsunami" name="tsunami" class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <label for="tsunami" class="form-label">Potensi Tsunami</label>
+                        <select id="tsunami" name="tsunami" class="form-select">
                             <option>Tidak Berpotensi Tsunami</option>
                             <option>Berpotensi Tsunami</option>
                         </select>
                     </div>
                     <div>
-                        <label for="guncangan" class="block text-sm font-medium text-gray-700">Guncangan (Skala MMI)</label>
-                        <select id="guncangan" name="guncangan" class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option>I</option>
-                            <option>II-III</option>
-                            <option>IV</option>
-                            <option>V</option>
-                            <option>VI</option>
-                            <option>VII</option>
-                            <option>VIII</option>
-                            <option>IX</option>
-                            <option>X+</option>
+                        <label for="guncangan" class="form-label">Guncangan (Skala MMI)</label>
+                        <select id="guncangan" name="guncangan" class="form-select">
+                            <option>I</option> <option>II-III</option> <option>IV</option> <option>V</option> <option>VI</option> <option>VII</option> <option>VIII</option> <option>IX</option> <option>X+</option>
                         </select>
                     </div>
                 </div>
-                <div class="mt-8">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Submit Informasi
-                    </button>
-                </div>
+                <button type="submit" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Submit Informasi</button>
             </form>
         </div>
     </div>
 
-    <!-- ======================================================= -->
-    <!-- PAGE 2: DISPLAY INFO                                    -->
-    <!-- ======================================================= -->
     <div id="page2" class="hidden w-full max-w-2xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <!-- This is the container that will be saved as an image -->
             <div id="report-container" class="bg-white p-4 sm:p-6">
                 <header class="text-center mb-4">
-                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Info Gempabumi Terkini</h2>
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Informasi Gempa Terkini</h2>
                     <p class="text-sm sm:text-base text-gray-500">@gempa.dunia</p>
                 </header>
                 
                 <div id="map" class="w-full rounded-lg border border-gray-200 shadow-inner"></div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <!-- Magnitude Section -->
-                    <div id="magnitude-container" class="md:col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center">
+                    <div id="magnitude-container" class="md-col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center">
                         <h3 class="font-bold text-lg uppercase tracking-wider">Magnitudo</h3>
-                        <p id="display-magnitude" class="text-7xl font-black">2.1</p>
+                        <p id="display-magnitude" class="text-[80px] font-black leading-none">2.1</p>
                     </div>
                     
-                    <!-- Details Section -->
                     <div class="md:col-span-2 space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
                              <div class="flex items-start space-x-3">
@@ -142,8 +124,8 @@
                                   <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">Guncangan</h4>
-                                    <p id="display-guncangan-estimasi" class="text-gray-600 font-semibold"></p>
+                                    <h4 class="font-bold text-gray-800">Estimasi Guncangan</h4>
+                                    <p id="display-guncangan-mmi" class="text-gray-600 font-semibold"></p>
                                 </div>
                             </div>
                         </div>
@@ -156,33 +138,42 @@
             </div>
         </div>
 
-        <!-- Action buttons -->
         <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-            <button id="save-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                Simpan sebagai JPG
-            </button>
-            <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                Kembali ke Form
-            </button>
+            <button id="save-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">Simpan sebagai JPG</button>
+            <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">Kembali ke Form</button>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // === ELEMENT SELECTORS ===
+        window.addEventListener('load', () => {
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
             const gempaForm = document.getElementById('gempaForm');
             const saveBtn = document.getElementById('save-btn');
             const backBtn = document.getElementById('back-btn');
 
-            // === INITIALIZE MAP & MARKER ===
             const map = L.map('map').setView([-2.548926, 118.0148634], 5);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
-            let marker = L.marker([0, 0]).addTo(map);
-            let circle = L.circle([0, 0], { radius: 20000, color: 'red', fillColor: '#f03', fillOpacity: 0.3 }).addTo(map);
+            
+            const epicentrumIcon = L.divIcon({
+                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+                        <circle cx="12" cy="12" r="11" fill="#c92a2a" stroke="white" stroke-width="1.5"/>
+                        <path d="M4 12h2l3-6 4 12 3-8 2 2h2" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                       </svg>`,
+                className: '',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
 
-            // === COLOR MAPPING FOR MMI SCALE ===
+            let marker = L.marker([0, 0], { icon: epicentrumIcon }).addTo(map);
+            
+            let circles = [
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.1 }),
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.2 }),
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.3 })
+            ];
+            circles.forEach(c => c.addTo(map));
+
             const guncanganColors = {
                 'I':      { bg: 'bg-white',       text: 'text-black' },
                 'II-III': { bg: 'bg-blue-800',    text: 'text-white' },
@@ -195,8 +186,8 @@
                 'X+':     { bg: 'bg-red-800',     text: 'text-white' },
             };
 
-            // === HELPER FUNCTION: FORMAT DATE ===
             function formatWaktu(waktuISO) {
+                if (!waktuISO) return '';
                 const date = new Date(waktuISO);
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -207,56 +198,70 @@
                 return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds} WIB`;
             }
 
-            // === EVENT LISTENER: FORM SUBMIT ===
+            function getRadiiFromMagnitude(magnitude) {
+                let radiiKm;
+                if (magnitude < 1) radiiKm = [2, 4, 10];
+                else if (magnitude < 2) radiiKm = [3, 6, 12];
+                else if (magnitude < 3) radiiKm = [3, 6, 12];
+                else if (magnitude < 4) radiiKm = [4, 8, 14];
+                else if (magnitude < 5) radiiKm = [6, 12, 30];
+                else if (magnitude < 6) radiiKm = [10, 20, 40];
+                else if (magnitude < 7) radiiKm = [20, 40, 80];
+                else if (magnitude < 8) radiiKm = [40, 80, 120];
+                else if (magnitude < 9) radiiKm = [100, 200, 400];
+                else radiiKm = [200, 400, 800];
+                return radiiKm.map(km => km * 1000);
+            }
+
             gempaForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const formData = new FormData(gempaForm);
                 const data = Object.fromEntries(formData.entries());
                 
                 const [lat, lng] = data.lokasi.split(',').map(coord => parseFloat(coord.trim()));
+                const magnitude = parseFloat(data.magnitude);
 
-                // Update UI elements
-                document.getElementById('display-magnitude').textContent = parseFloat(data.magnitude).toFixed(1);
+                document.getElementById('display-magnitude').textContent = magnitude.toFixed(1);
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
                 document.getElementById('display-waktu').textContent = formatWaktu(data.waktu);
                 document.getElementById('display-koordinat').textContent = `${Math.abs(lat)} ${lat >= 0 ? 'LU' : 'LS'}, ${Math.abs(lng)} ${lng >= 0 ? 'BT' : 'BB'}`;
                 document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
-                document.getElementById('display-guncangan-estimasi').textContent = `Estimasi Guncangan : ${data.guncangan} MMI`;
+                document.getElementById('display-guncangan-mmi').textContent = `${data.guncangan} MMI`;
 
-                // Update Tsunami Display
                 const tsunamiDisplay = document.getElementById('display-tsunami');
                 tsunamiDisplay.textContent = data.tsunami;
-                tsunamiDisplay.classList.remove('bg-green-200', 'text-black', 'bg-red-800', 'text-white');
+                tsunamiDisplay.className = 'w-full font-bold text-3xl p-3 rounded-lg text-center';
                 if (data.tsunami === 'Berpotensi Tsunami') {
                     tsunamiDisplay.classList.add('bg-red-800', 'text-white');
                 } else {
                     tsunamiDisplay.classList.add('bg-green-200', 'text-black');
                 }
                 
-                // Update Magnitude Color
                 const magnitudeContainer = document.getElementById('magnitude-container');
                 const colors = guncanganColors[data.guncangan] || guncanganColors['IX'];
-                Object.values(guncanganColors).forEach(c => magnitudeContainer.classList.remove(c.bg, c.text));
-                magnitudeContainer.classList.add(colors.bg, colors.text);
+                magnitudeContainer.className = 'md:col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center';
+                magnitudeContainer.classList.add(colors.bg);
                 magnitudeContainer.querySelectorAll('h3, p').forEach(el => {
-                    Object.values(guncanganColors).forEach(c => el.classList.remove(c.text));
+                    el.classList.remove(...Object.values(guncanganColors).map(c=>c.text));
                     el.classList.add(colors.text);
                 });
 
-                // Update Map
                 const newLatLng = [lat, lng];
-                map.setView(newLatLng, 9);
+                map.setView(newLatLng, 7);
                 marker.setLatLng(newLatLng);
-                circle.setLatLng(newLatLng);
+                
+                const radiiMeters = getRadiiFromMagnitude(magnitude);
+                circles[0].setRadius(radiiMeters[2]);
+                circles[1].setRadius(radiiMeters[1]);
+                circles[2].setRadius(radiiMeters[0]);
+                circles.forEach(circle => circle.setLatLng(newLatLng));
 
-                // Switch Pages
                 page1.classList.add('hidden');
                 page2.classList.remove('hidden');
                 
                 setTimeout(() => map.invalidateSize(), 10);
             });
 
-            // === EVENT LISTENER: SAVE AS JPG ===
             saveBtn.addEventListener('click', function() {
                 const reportElement = document.getElementById('report-container');
                 html2canvas(reportElement, { useCORS: true, scale: 2 }).then(canvas => {
@@ -267,15 +272,12 @@
                 });
             });
 
-            // === EVENT LISTENER: BACK TO FORM ===
             backBtn.addEventListener('click', function() {
                 page2.classList.add('hidden');
                 page1.classList.remove('hidden');
             });
         });
     </script>
-
 </body>
 </html>
-
 
