@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Info Gempa Bumi</title>
     
-    <!-- Tailwind CSS for styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- LeafletJS for Map -->
@@ -16,72 +16,85 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        /* Custom font and base styling */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #ffffff;
         }
-        #map { height: 400px; } 
-
-        /* Custom styles for form elements for consistency */
+        #map { height: 400px; }
         .form-label {
-            @apply block text-sm font-medium text-gray-700;
+            @apply block text-sm font-medium text-gray-700 mb-1;
         }
-        .form-input, .form-select {
+        .form-input {
             @apply mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen py-8 px-4">
+<body class="flex items-center justify-center min-h-screen p-4">
 
+    <!-- PAGE 1: FORM INPUT -->
     <div id="page1" class="w-full max-w-lg mx-auto">
         <div class="bg-white p-8 rounded-2xl shadow-xl">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Masukkan Detail Gempabumi</h1>
-            <form id="gempaForm">
-                <div class="space-y-4">
-                    <div>
-                        <label for="magnitude" class="form-label">Kekuatan (Magnitudo)</label>
-                        <input type="number" step="0.1" id="magnitude" name="magnitude" required class="form-input" placeholder="Contoh: 5.4">
-                    </div>
-                    <div>
-                        <label for="kedalaman" class="form-label">Kedalaman (km)</label>
-                        <input type="number" id="kedalaman" name="kedalaman" required class="form-input" placeholder="Contoh: 10">
-                    </div>
-                    <div>
-                        <label for="waktu" class="form-label">Waktu Terjadinya</label>
-                        <input type="datetime-local" id="waktu" name="waktu" required step="1" class="form-input">
-                    </div>
-                    <div>
-                        <label for="lokasi" class="form-label">Lokasi (Latitude, Longitude)</label>
-                        <input type="text" id="lokasi" name="lokasi" required class="form-input" placeholder="Contoh: 3.10, 117.63">
-                    </div>
-                    <div>
-                        <label for="detailLokasi" class="form-label">Detail Lokasi</label>
-                        <input type="text" id="detailLokasi" name="detailLokasi" required class="form-input" placeholder="Contoh: 28 km Tenggara TARAKAN-KALTARA">
-                    </div>
-                    <div>
-                        <label for="tsunami" class="form-label">Potensi Tsunami</label>
-                        <select id="tsunami" name="tsunami" class="form-select">
-                            <option>Tidak Berpotensi Tsunami</option>
-                            <option>Berpotensi Tsunami</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="guncangan" class="form-label">Guncangan (Skala MMI)</label>
-                        <select id="guncangan" name="guncangan" class="form-select">
-                            <option>I</option> <option>II-III</option> <option>IV</option> <option>V</option> <option>VI</option> <option>VII</option> <option>VIII</option> <option>IX</option> <option>X+</option>
-                        </select>
+            <form id="gempaForm" class="space-y-4">
+                <div>
+                    <label for="magnitude" class="form-label">Kekuatan (Magnitudo)</label>
+                    <input type="number" step="0.1" id="magnitude" name="magnitude" required class="form-input" placeholder="Contoh: 5.4">
+                </div>
+                <div>
+                    <label for="kedalaman" class="form-label">Kedalaman (km)</label>
+                    <input type="number" step="any" id="kedalaman" name="kedalaman" required class="form-input" placeholder="Contoh: 10.5">
+                </div>
+                <div>
+                    <label class="form-label">Waktu Terjadinya</label>
+                    <div class="grid grid-cols-3 gap-2 mt-1">
+                        <input type="date" id="waktu_tgl" name="waktu_tgl" required class="form-input">
+                        <input type="time" id="waktu_jam" name="waktu_jam" required class="form-input">
+                        <input type="number" id="waktu_dtk" name="waktu_dtk" required class="form-input" placeholder="Detik" min="0" max="59">
                     </div>
                 </div>
-                <button type="submit" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Submit Informasi</button>
+                <div>
+                    <label for="lokasi" class="form-label">Lokasi (Latitude, Longitude)</label>
+                    <input type="text" id="lokasi" name="lokasi" required class="form-input" placeholder="Contoh: -7.1, 110.4">
+                </div>
+                <div>
+                    <label for="detailLokasi" class="form-label">Detail Lokasi</label>
+                    <input type="text" id="detailLokasi" name="detailLokasi" required class="form-input" placeholder="Contoh: 28 km Tenggara TARAKAN-KALTARA">
+                </div>
+                <div>
+                    <label for="tsunami" class="form-label">Potensi Tsunami</label>
+                    <select id="tsunami" name="tsunami" class="form-input">
+                        <option>Tidak Berpotensi Tsunami</option>
+                        <option>Berpotensi Tsunami</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="guncangan" class="form-label">Guncangan (MMI)</label>
+                    <select id="guncangan" name="guncangan" class="form-input">
+                        <option>I</option>
+                        <option>II-III</option>
+                        <option>IV</option>
+                        <option>V</option>
+                        <option>VI</option>
+                        <option>VII</option>
+                        <option>VIII</option>
+                        <option>IX</option>
+                        <option>X+</option>
+                    </select>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Submit Informasi
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
+    <!-- PAGE 2: DISPLAY INFO -->
     <div id="page2" class="hidden w-full max-w-2xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div id="report-container" class="bg-white p-4 sm:p-6">
+            <div id="report-container" class="bg-white p-4 sm:p-6" style="position: relative;">
                 <header class="text-center mb-4">
                     <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Informasi Gempa Terkini</h2>
                     <p class="text-sm sm:text-base text-gray-500">@gempa.dunia</p>
@@ -92,27 +105,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div id="magnitude-container" class="md-col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center">
                         <h3 class="font-bold text-lg uppercase tracking-wider">Magnitudo</h3>
-                        <p id="display-magnitude" class="text-[80px] font-black leading-none">2.1</p>
+                        <p id="display-magnitude" class="text-[90px] font-black leading-none">2.1</p>
                     </div>
                     
                     <div class="md:col-span-2 space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-                             <div class="flex items-start space-x-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <div class="flex items-start space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 <div>
                                     <h4 class="font-bold text-gray-800">Waktu</h4>
                                     <p id="display-waktu" class="text-gray-600"></p>
                                 </div>
                             </div>
                              <div class="flex items-start space-x-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 12.343l-3.535 3.536m-2.829-2.829l-3.535 3.536m-2.121-2.121L3 17.25m18-10.5L3 6.75m18 0l-3.535 3.536" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 12.343l-3.535 3.536m-2.829-2.829l-3.535 3.536m-2.121-2.121L3 17.25m18-10.5L3 6.75m18 0l-3.535 3.536" /></svg>
                                 <div>
                                     <h4 class="font-bold text-gray-800">Kedalaman</h4>
                                     <p id="display-kedalaman" class="text-gray-600"></p>
                                 </div>
                             </div>
                             <div class="flex items-start space-x-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                 <div>
                                     <h4 class="font-bold text-gray-800">Lokasi</h4>
                                     <p id="display-koordinat" class="text-gray-600"></p>
@@ -120,12 +133,10 @@
                                 </div>
                             </div>
                             <div class="flex items-start space-x-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                                 <div>
                                     <h4 class="font-bold text-gray-800">Estimasi Guncangan</h4>
-                                    <p id="display-guncangan-mmi" class="text-gray-600 font-semibold"></p>
+                                    <p id="display-guncangan" class="text-gray-600 font-semibold"></p>
                                 </div>
                             </div>
                         </div>
@@ -139,8 +150,12 @@
         </div>
 
         <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-            <button id="save-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">Simpan sebagai JPG</button>
-            <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">Kembali ke Form</button>
+             <button id="save-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                Simpan sebagai JPG
+            </button>
+            <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                Kembali ke Form
+            </button>
         </div>
     </div>
 
@@ -151,22 +166,27 @@
             const gempaForm = document.getElementById('gempaForm');
             const saveBtn = document.getElementById('save-btn');
             const backBtn = document.getElementById('back-btn');
-
-            const map = L.map('map').setView([-2.548926, 118.0148634], 5);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
             
-            const epicentrumIcon = L.divIcon({
-                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-                        <circle cx="12" cy="12" r="11" fill="#c92a2a" stroke="white" stroke-width="1.5"/>
-                        <path d="M4 12h2l3-6 4 12 3-8 2 2h2" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                       </svg>`,
+            const map = L.map('map').setView([-2.548926, 118.0148634], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            const epicenterIconSVG = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+                    <circle cx="50" cy="50" r="45" fill="#ff0000" stroke="#fff" stroke-width="5"/>
+                    <path d="M25,50 h10 l5,-15 l10,30 l10,-30 l5,15 h10" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>`;
+            
+            const epicenterIcon = L.divIcon({
+                html: epicenterIconSVG,
                 className: '',
                 iconSize: [32, 32],
                 iconAnchor: [16, 16]
             });
 
-            let marker = L.marker([0, 0], { icon: epicentrumIcon }).addTo(map);
-            
+            let marker = L.marker([0, 0], { icon: epicenterIcon }).addTo(map);
             let circles = [
                 L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.1 }),
                 L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.2 }),
@@ -175,106 +195,156 @@
             circles.forEach(c => c.addTo(map));
 
             const guncanganColors = {
-                'I':      { bg: 'bg-white',       text: 'text-black' },
-                'II-III': { bg: 'bg-blue-800',    text: 'text-white' },
-                'IV':     { bg: 'bg-cyan-400',    text: 'text-black' },
-                'V':      { bg: 'bg-green-200',   text: 'text-black' },
-                'VI':     { bg: 'bg-yellow-400',  text: 'text-black' },
-                'VII':    { bg: 'bg-orange-300',  text: 'text-black' },
-                'VIII':   { bg: 'bg-orange-500',  text: 'text-white' },
-                'IX':     { bg: 'bg-red-600',     text: 'text-white' },
-                'X+':     { bg: 'bg-red-800',     text: 'text-white' },
+                'I':      { bg: '#ffffff', text: 'text-black' },
+                'II-III': { bg: '#8fdaff', text: 'text-black' },
+                'IV':     { bg: '#57f7ff', text: 'text-black' },
+                'V':      { bg: '#95ffa3', text: 'text-black' },
+                'VI':     { bg: '#fceb05', text: 'text-black' },
+                'VII':    { bg: '#ffb401', text: 'text-white' },
+                'VIII':   { bg: '#ff6f01', text: 'text-white' },
+                'IX':     { bg: '#ff0109', text: 'text-white' },
+                'X+':     { bg: '#ba0000', text: 'text-white' },
             };
 
-            function formatWaktu(waktuISO) {
-                if (!waktuISO) return '';
-                const date = new Date(waktuISO);
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const seconds = String(date.getSeconds()).padStart(2, '0');
-                return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds} WIB`;
+            function formatWaktu(tgl, jam, dtk) {
+                if (!tgl || !jam || dtk === null) return '';
+                const date = new Date(`${tgl}T${jam}:${String(dtk).padStart(2, '0')}`);
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const formatted = new Intl.DateTimeFormat('id-ID', options).format(date);
+                return `${formatted.replace(/\./g, ':').replace(/,/g, ',')} WIB`;
+            }
+            
+            function getRadiusByMagnitude(mag) {
+                if (mag < 1) return [2000, 4000, 10000];
+                if (mag < 2) return [2000, 4000, 10000];
+                if (mag < 3) return [3000, 6000, 12000];
+                if (mag < 4) return [4000, 8000, 14000];
+                if (mag < 5) return [6000, 12000, 30000];
+                if (mag < 6) return [10000, 20000, 40000];
+                if (mag < 7) return [20000, 40000, 80000];
+                if (mag < 8) return [40000, 80000, 120000];
+                if (mag < 9) return [100000, 200000, 400000];
+                return [200000, 400000, 800000];
             }
 
-            function getRadiiFromMagnitude(magnitude) {
-                let radiiKm;
-                if (magnitude < 1) radiiKm = [2, 4, 10];
-                else if (magnitude < 2) radiiKm = [3, 6, 12];
-                else if (magnitude < 3) radiiKm = [3, 6, 12];
-                else if (magnitude < 4) radiiKm = [4, 8, 14];
-                else if (magnitude < 5) radiiKm = [6, 12, 30];
-                else if (magnitude < 6) radiiKm = [10, 20, 40];
-                else if (magnitude < 7) radiiKm = [20, 40, 80];
-                else if (magnitude < 8) radiiKm = [40, 80, 120];
-                else if (magnitude < 9) radiiKm = [100, 200, 400];
-                else radiiKm = [200, 400, 800];
-                return radiiKm.map(km => km * 1000);
-            }
-
-            gempaForm.addEventListener('submit', function(event) {
-                event.preventDefault();
+            gempaForm.addEventListener('submit', function (e) {
+                e.preventDefault();
                 const formData = new FormData(gempaForm);
                 const data = Object.fromEntries(formData.entries());
+
+                const [lat, lng] = data.lokasi.split(',').map(Number);
                 
-                const [lat, lng] = data.lokasi.split(',').map(coord => parseFloat(coord.trim()));
-                const magnitude = parseFloat(data.magnitude);
-
-                document.getElementById('display-magnitude').textContent = magnitude.toFixed(1);
+                document.getElementById('display-magnitude').textContent = parseFloat(data.magnitude).toFixed(1);
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
-                document.getElementById('display-waktu').textContent = formatWaktu(data.waktu);
-                document.getElementById('display-koordinat').textContent = `${Math.abs(lat)} ${lat >= 0 ? 'LU' : 'LS'}, ${Math.abs(lng)} ${lng >= 0 ? 'BT' : 'BB'}`;
+                document.getElementById('display-waktu').textContent = formatWaktu(data.waktu_tgl, data.waktu_jam, data.waktu_dtk);
+                document.getElementById('display-koordinat').textContent = `${Math.abs(lat)} ${lat > 0 ? 'LU' : 'LS'}, ${Math.abs(lng)} ${lng > 0 ? 'BT' : 'BB'}`;
                 document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
-                document.getElementById('display-guncangan-mmi').textContent = `${data.guncangan} MMI`;
-
+                document.getElementById('display-guncangan').textContent = `${data.guncangan} MMI`;
+                
                 const tsunamiDisplay = document.getElementById('display-tsunami');
                 tsunamiDisplay.textContent = data.tsunami;
-                tsunamiDisplay.className = 'w-full font-bold text-3xl p-3 rounded-lg text-center';
+                tsunamiDisplay.classList.remove('bg-green-200', 'text-black', 'bg-red-800', 'text-white');
                 if (data.tsunami === 'Berpotensi Tsunami') {
                     tsunamiDisplay.classList.add('bg-red-800', 'text-white');
                 } else {
                     tsunamiDisplay.classList.add('bg-green-200', 'text-black');
                 }
-                
+
                 const magnitudeContainer = document.getElementById('magnitude-container');
-                const colors = guncanganColors[data.guncangan] || guncanganColors['IX'];
-                magnitudeContainer.className = 'md:col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center';
-                magnitudeContainer.classList.add(colors.bg);
-                magnitudeContainer.querySelectorAll('h3, p').forEach(el => {
-                    el.classList.remove(...Object.values(guncanganColors).map(c=>c.text));
+                const magTextElements = magnitudeContainer.querySelectorAll('h3, p');
+                const colors = guncanganColors[data.guncangan] || { bg: '#cccccc', text: 'text-black' };
+                magnitudeContainer.style.backgroundColor = colors.bg;
+                magTextElements.forEach(el => {
+                    el.classList.remove('text-white', 'text-black');
                     el.classList.add(colors.text);
                 });
 
-                const newLatLng = [lat, lng];
-                map.setView(newLatLng, 7);
-                marker.setLatLng(newLatLng);
-                
-                const radiiMeters = getRadiiFromMagnitude(magnitude);
-                circles[0].setRadius(radiiMeters[2]);
-                circles[1].setRadius(radiiMeters[1]);
-                circles[2].setRadius(radiiMeters[0]);
-                circles.forEach(circle => circle.setLatLng(newLatLng));
-
                 page1.classList.add('hidden');
                 page2.classList.remove('hidden');
-                
-                setTimeout(() => map.invalidateSize(), 10);
+
+                setTimeout(() => {
+                    map.invalidateSize();
+                    map.setView([lat, lng], 7);
+                    marker.setLatLng([lat, lng]);
+                    const radii = getRadiusByMagnitude(parseFloat(data.magnitude));
+                    circles.forEach((circle, index) => {
+                        circle.setLatLng([lat, lng]);
+                        circle.setRadius(radii[index]);
+                    });
+                    
+                    let maxRadius = Math.max(...radii);
+                    let zoomLevel = 11 - Math.log(maxRadius / 1000) / Math.log(2);
+                    map.setView([lat, lng], Math.max(5, Math.min(13, zoomLevel)));
+                }, 200);
             });
 
-            saveBtn.addEventListener('click', function() {
-                const reportElement = document.getElementById('report-container');
-                html2canvas(reportElement, { useCORS: true, scale: 2 }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = 'info-gempabumi.jpg';
-                    link.href = canvas.toDataURL('image/jpeg');
-                    link.click();
-                });
-            });
-
-            backBtn.addEventListener('click', function() {
+            backBtn.addEventListener('click', () => {
                 page2.classList.add('hidden');
                 page1.classList.remove('hidden');
+            });
+
+            saveBtn.addEventListener('click', async () => {
+                const reportContainer = document.getElementById('report-container');
+                const originalText = saveBtn.textContent;
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Menyimpan...';
+
+                // --- FIXES START ---
+                // 1. Hide original dynamic leaflet controls
+                const zoomControl = reportContainer.querySelector('.leaflet-control-zoom');
+                const attributionControl = reportContainer.querySelector('.leaflet-control-attribution');
+                if (zoomControl) zoomControl.style.visibility = 'hidden';
+                if (attributionControl) attributionControl.style.visibility = 'hidden';
+
+                // 2. Create static placeholders that render correctly
+                const zoomPlaceholder = document.createElement('div');
+                zoomPlaceholder.innerHTML = `<div style="border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; background: #fff; width: 28px; box-shadow: 0 1px 5px rgba(0,0,0,0.65);"><div style="text-align: center; font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid #ccc; color: #333;">+</div><div style="text-align: center; font-size: 1.4rem; font-weight: bold; color: #333;">-</div></div>`;
+                zoomPlaceholder.style.position = 'absolute';
+                zoomPlaceholder.style.top = '10px';
+                zoomPlaceholder.style.left = '10px';
+                zoomPlaceholder.style.zIndex = '1001';
+                reportContainer.appendChild(zoomPlaceholder);
+
+                const attributionPlaceholder = document.createElement('div');
+                attributionPlaceholder.innerHTML = 'Leaflet | © OpenStreetMap';
+                attributionPlaceholder.style.position = 'absolute';
+                attributionPlaceholder.style.bottom = '2px';
+                attributionPlaceholder.style.right = '5px';
+                attributionPlaceholder.style.zIndex = '1001';
+                attributionPlaceholder.style.fontSize = '11px';
+                attributionPlaceholder.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                attributionPlaceholder.style.padding = '0 5px';
+                reportContainer.appendChild(attributionPlaceholder);
+                // --- FIXES END ---
+
+                await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+                try {
+                    const canvas = await html2canvas(reportContainer, {
+                        scale: 3,
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        scrollX: 0,
+                        scrollY: -window.scrollY
+                    });
+                    const link = document.createElement('a');
+                    link.download = 'info-gempabumi.jpg';
+                    link.href = canvas.toDataURL('image/jpeg', 0.95);
+                    link.click();
+                } catch (err) {
+                    console.error("Gagal menyimpan gambar:", err);
+                } finally {
+                    // --- CLEANUP START ---
+                    if (zoomControl) zoomControl.style.visibility = 'visible';
+                    if (attributionControl) attributionControl.style.visibility = 'visible';
+                    reportContainer.removeChild(zoomPlaceholder);
+                    reportContainer.removeChild(attributionPlaceholder);
+                    
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = originalText;
+                    // --- CLEANUP END ---
+                }
             });
         });
     </script>
