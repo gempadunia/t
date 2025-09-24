@@ -12,9 +12,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
      
-    <!-- html2canvas for saving as image -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
         body {
@@ -38,28 +35,8 @@
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Masukkan Detail Gempabumi</h1>
             <form id="gempaForm" class="space-y-4">
                 <div>
-                    <label for="magnitude" class="form-label">Kekuatan (Magnitudo)</label>
-                    <input type="number" step="0.1" id="magnitude" name="magnitude" required class="form-input" placeholder="Contoh: 5.4">
-                </div>
-                <div>
-                    <label for="kedalaman" class="form-label">Kedalaman (km)</label>
-                    <input type="number" step="any" id="kedalaman" name="kedalaman" required class="form-input" placeholder="Contoh: 10.5">
-                </div>
-                <div>
-                    <label class="form-label">Waktu Terjadinya</label>
-                    <div class="grid grid-cols-3 gap-2 mt-1">
-                        <input type="date" id="waktu_tgl" name="waktu_tgl" required class="form-input">
-                        <input type="time" id="waktu_jam" name="waktu_jam" required class="form-input">
-                        <input type="number" id="waktu_dtk" name="waktu_dtk" required class="form-input" placeholder="Detik" min="0" max="59">
-                    </div>
-                </div>
-                <div>
-                    <label for="lokasi" class="form-label">Lokasi (Latitude, Longitude)</label>
-                    <input type="text" id="lokasi" name="lokasi" required class="form-input" placeholder="Contoh: -7.1, 110.4">
-                </div>
-                <div>
-                    <label for="detailLokasi" class="form-label">Detail Lokasi</label>
-                    <input type="text" id="detailLokasi" name="detailLokasi" required class="form-input" placeholder="Contoh: 28 km Tenggara TARAKAN-KALTARA">
+                    <label for="csvData" class="form-label">Data Gempa (Format CSV)</label>
+                    <textarea id="csvData" name="csvData" rows="4" class="form-input" placeholder="mag,kedalaman,waktu,lat,long,lokasi&#10;5.4,10.0,2024-09-24T12:54:00Z,-7.5,110.5,&quot;135 km BaratDaya Semarang&quot;"></textarea>
                 </div>
                 <div>
                     <label for="tsunami" class="form-label">Potensi Tsunami</label>
@@ -149,10 +126,7 @@
             </div>
         </div>
 
-        <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-             <button id="save-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                Simpan sebagai JPG
-            </button>
+        <div class="mt-6 flex justify-center">
             <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
                 Kembali ke Form
             </button>
@@ -164,7 +138,6 @@
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
             const gempaForm = document.getElementById('gempaForm');
-            const saveBtn = document.getElementById('save-btn');
             const backBtn = document.getElementById('back-btn');
             
             const map = L.map('map').setView([-2.548926, 118.0148634], 5);
@@ -188,9 +161,9 @@
 
             let marker = L.marker([0, 0], { icon: epicenterIcon }).addTo(map);
             let circles = [
-                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.1 }),
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.3 }),
                 L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.2 }),
-                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.3 })
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.1 })
             ];
             circles.forEach(c => c.addTo(map));
 
@@ -206,10 +179,10 @@
                 'X+':     { bg: '#ba0000', text: 'text-white' },
             };
 
-            function formatWaktu(tgl, jam, dtk) {
-                if (!tgl || !jam || dtk === null) return '';
-                const date = new Date(`${tgl}T${jam}:${String(dtk).padStart(2, '0')}`);
-                const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            function formatWaktuISO(isoString) {
+                if (!isoString) return '';
+                const date = new Date(isoString);
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
                 const formatted = new Intl.DateTimeFormat('id-ID', options).format(date);
                 return `${formatted.replace(/\./g, ':').replace(/,/g, ',')} WIB`;
             }
@@ -230,14 +203,32 @@
             gempaForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const formData = new FormData(gempaForm);
-                const data = Object.fromEntries(formData.entries());
+                const rawData = Object.fromEntries(formData.entries());
 
-                const [lat, lng] = data.lokasi.split(',').map(Number);
+                const csvLines = rawData.csvData.split('\n');
+                const csvData = csvLines[csvLines.length - 1]; // Process only the last line
+                const parts = csvData.split(',');
+
+                if (parts.length < 6) {
+                    alert('Format CSV tidak valid. Pastikan ada 6 kolom: mag,kedalaman,waktu,lat,long,lokasi');
+                    return;
+                }
+
+                const data = {
+                    magnitude: parseFloat(parts[0]),
+                    kedalaman: parseFloat(parts[1]),
+                    waktu: parts[2],
+                    lat: parseFloat(parts[3]),
+                    lng: parseFloat(parts[4]),
+                    detailLokasi: parts.slice(5).join(',').replace(/"/g, ''), // Join remaining parts for location
+                    tsunami: rawData.tsunami,
+                    guncangan: rawData.guncangan
+                };
                 
-                document.getElementById('display-magnitude').textContent = parseFloat(data.magnitude).toFixed(1);
+                document.getElementById('display-magnitude').textContent = data.magnitude.toFixed(1);
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
-                document.getElementById('display-waktu').textContent = formatWaktu(data.waktu_tgl, data.waktu_jam, data.waktu_dtk);
-                document.getElementById('display-koordinat').textContent = `${Math.abs(lat)} ${lat > 0 ? 'LU' : 'LS'}, ${Math.abs(lng)} ${lng > 0 ? 'BT' : 'BB'}`;
+                document.getElementById('display-waktu').textContent = formatWaktuISO(data.waktu);
+                document.getElementById('display-koordinat').textContent = `${Math.abs(data.lat)} ${data.lat >= 0 ? 'LU' : 'LS'}, ${Math.abs(data.lng)} ${data.lng >= 0 ? 'BT' : 'BB'}`;
                 document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
                 document.getElementById('display-guncangan').textContent = `${data.guncangan} MMI`;
                 
@@ -264,17 +255,17 @@
 
                 setTimeout(() => {
                     map.invalidateSize();
-                    map.setView([lat, lng], 7);
-                    marker.setLatLng([lat, lng]);
-                    const radii = getRadiusByMagnitude(parseFloat(data.magnitude));
+                    map.setView([data.lat, data.lng], 7);
+                    marker.setLatLng([data.lat, data.lng]);
+                    const radii = getRadiusByMagnitude(data.magnitude);
                     circles.forEach((circle, index) => {
-                        circle.setLatLng([lat, lng]);
+                        circle.setLatLng([data.lat, data.lng]);
                         circle.setRadius(radii[index]);
                     });
                     
                     let maxRadius = Math.max(...radii);
                     let zoomLevel = 11 - Math.log(maxRadius / 1000) / Math.log(2);
-                    map.setView([lat, lng], Math.max(5, Math.min(13, zoomLevel)));
+                    map.setView([data.lat, data.lng], Math.max(5, Math.min(13, zoomLevel)));
                 }, 200);
             });
 
@@ -283,69 +274,6 @@
                 page1.classList.remove('hidden');
             });
 
-            saveBtn.addEventListener('click', async () => {
-                const reportContainer = document.getElementById('report-container');
-                const originalText = saveBtn.textContent;
-                saveBtn.disabled = true;
-                saveBtn.textContent = 'Menyimpan...';
-
-                // --- FIXES START ---
-                // 1. Hide original dynamic leaflet controls
-                const zoomControl = reportContainer.querySelector('.leaflet-control-zoom');
-                const attributionControl = reportContainer.querySelector('.leaflet-control-attribution');
-                if (zoomControl) zoomControl.style.visibility = 'hidden';
-                if (attributionControl) attributionControl.style.visibility = 'hidden';
-
-                // 2. Create static placeholders that render correctly
-                const zoomPlaceholder = document.createElement('div');
-                zoomPlaceholder.innerHTML = `<div style="border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; background: #fff; width: 28px; box-shadow: 0 1px 5px rgba(0,0,0,0.65);"><div style="text-align: center; font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid #ccc; color: #333;">+</div><div style="text-align: center; font-size: 1.4rem; font-weight: bold; color: #333;">-</div></div>`;
-                zoomPlaceholder.style.position = 'absolute';
-                zoomPlaceholder.style.top = '10px';
-                zoomPlaceholder.style.left = '10px';
-                zoomPlaceholder.style.zIndex = '1001';
-                reportContainer.appendChild(zoomPlaceholder);
-
-                const attributionPlaceholder = document.createElement('div');
-                attributionPlaceholder.innerHTML = 'Leaflet | © OpenStreetMap';
-                attributionPlaceholder.style.position = 'absolute';
-                attributionPlaceholder.style.bottom = '2px';
-                attributionPlaceholder.style.right = '5px';
-                attributionPlaceholder.style.zIndex = '1001';
-                attributionPlaceholder.style.fontSize = '11px';
-                attributionPlaceholder.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-                attributionPlaceholder.style.padding = '0 5px';
-                reportContainer.appendChild(attributionPlaceholder);
-                // --- FIXES END ---
-
-                await new Promise(resolve => setTimeout(resolve, 1500)); 
-
-                try {
-                    const canvas = await html2canvas(reportContainer, {
-                        scale: 3,
-                        useCORS: true,
-                        allowTaint: true,
-                        logging: false,
-                        scrollX: 0,
-                        scrollY: -window.scrollY
-                    });
-                    const link = document.createElement('a');
-                    link.download = 'info-gempabumi.jpg';
-                    link.href = canvas.toDataURL('image/jpeg', 0.95);
-                    link.click();
-                } catch (err) {
-                    console.error("Gagal menyimpan gambar:", err);
-                } finally {
-                    // --- CLEANUP START ---
-                    if (zoomControl) zoomControl.style.visibility = 'visible';
-                    if (attributionControl) attributionControl.style.visibility = 'visible';
-                    reportContainer.removeChild(zoomPlaceholder);
-                    reportContainer.removeChild(attributionPlaceholder);
-                    
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = originalText;
-                    // --- CLEANUP END ---
-                }
-            });
         });
     </script>
 </body>
