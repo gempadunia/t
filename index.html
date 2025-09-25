@@ -31,7 +31,7 @@
 
     <!-- PAGE 1: FORM INPUT -->
     <div id="page1" class="w-full max-w-lg mx-auto">
-        <div class="bg-white p-8 rounded-2xl shadow-xl">
+        <div class="bg-white p-8 rounded-2xl border border-gray-200">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Masukkan Detail Gempabumi</h1>
             <form id="gempaForm" class="space-y-4">
                 <div>
@@ -70,7 +70,7 @@
 
     <!-- PAGE 2: DISPLAY INFO -->
     <div id="page2" class="hidden w-full max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <div id="report-container" class="bg-white p-4 sm:p-6" style="position: relative;">
                 <header class="text-center mb-4">
                     <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Informasi Gempa Terkini</h2>
@@ -126,10 +126,25 @@
             </div>
         </div>
 
-        <div class="mt-6 flex justify-center">
-            <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                Kembali ke Form
-            </button>
+        <!-- Narrative and Action buttons -->
+        <div class="mt-6 w-full">
+            <!-- Narasi Section -->
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-lg text-gray-800">Narasi Gempabumi</h3>
+                    <button id="salin-btn" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-lg transition-colors">
+                        Salin Narasi
+                    </button>
+                </div>
+                <pre id="narasi-gempa" class="whitespace-pre-wrap text-sm text-gray-700 font-sans bg-white p-3 rounded"></pre>
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-6 flex justify-center">
+                <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    Kembali ke Form
+                </button>
+            </div>
         </div>
     </div>
 
@@ -139,6 +154,8 @@
             const page2 = document.getElementById('page2');
             const gempaForm = document.getElementById('gempaForm');
             const backBtn = document.getElementById('back-btn');
+            const salinBtn = document.getElementById('salin-btn');
+            const narasiDisplay = document.getElementById('narasi-gempa');
             
             const map = L.map('map').setView([-2.548926, 118.0148634], 5);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -182,11 +199,66 @@
             function formatWaktuISO(isoString) {
                 if (!isoString) return '';
                 const date = new Date(isoString);
-                const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
-                const formatted = new Intl.DateTimeFormat('id-ID', options).format(date);
-                return `${formatted.replace(/\./g, ':').replace(/,/g, ',')} WIB`;
+                const options = { 
+                    day: '2-digit', 
+                    month: 'long', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit', 
+                    hour12: false, 
+                    timeZone: 'Asia/Jakarta' 
+                };
+                
+                const formatter = new Intl.DateTimeFormat('id-ID', options);
+                const parts = formatter.formatToParts(date);
+                
+                let day = parts.find(p => p.type === 'day').value;
+                let month = parts.find(p => p.type === 'month').value;
+                let year = parts.find(p => p.type === 'year').value;
+                let hour = parts.find(p => p.type === 'hour').value;
+                let minute = parts.find(p => p.type === 'minute').value;
+                let second = parts.find(p => p.type === 'second').value;
+
+                return `${day} ${month} ${year} ${hour}:${minute}:${second} WIB`;
+            }
+
+            function getCurrentWIBTime() {
+                const now = new Date();
+                const options = { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false, 
+                    timeZone: 'Asia/Jakarta' 
+                };
+                const formatted = new Intl.DateTimeFormat('id-ID', options).format(now);
+                return formatted.replace(/\./g, ':').replace(/,/g, ' ');
             }
             
+            function generateNarasi(data) {
+                const publishedTime = getCurrentWIBTime();
+                const narasi = `M${data.magnitude.toFixed(1)}
+[PARAMETER AWAL]
+
+Kedalaman = ${data.kedalaman} Kilometer
+Lokasi = ${data.detailLokasi}
+Waktu = ${formatWaktuISO(data.waktu)}
+Sumber Gempa = ?
+Guncangan Maksimum = ${data.guncangan} MMI
+Potensi Tsunami = ${data.tsunami}
+Estimasi Korban = ?
+Perkiraan Kerugian = ?
+Rincian Guncangan Gempa (dalam MMI) = 
+Belum Tersedia
+
+Data dan ShakeMap oleh ?
+Dipublikasikan pada ${publishedTime} WIB`;
+                return narasi;
+            }
+
             function getRadiusByMagnitude(mag) {
                 if (mag < 1) return [2000, 4000, 10000];
                 if (mag < 2) return [2000, 4000, 10000];
@@ -206,7 +278,7 @@
                 const rawData = Object.fromEntries(formData.entries());
 
                 const csvLines = rawData.csvData.split('\n');
-                const csvData = csvLines[csvLines.length - 1]; // Process only the last line
+                const csvData = csvLines[csvLines.length - 1]; 
                 const parts = csvData.split(',');
 
                 if (parts.length < 6) {
@@ -220,7 +292,7 @@
                     waktu: parts[2],
                     lat: parseFloat(parts[3]),
                     lng: parseFloat(parts[4]),
-                    detailLokasi: parts.slice(5).join(',').replace(/"/g, ''), // Join remaining parts for location
+                    detailLokasi: parts.slice(5).join(',').replace(/"/g, ''), 
                     tsunami: rawData.tsunami,
                     guncangan: rawData.guncangan
                 };
@@ -250,6 +322,9 @@
                     el.classList.add(colors.text);
                 });
 
+                // Generate and display narasi
+                narasiDisplay.textContent = generateNarasi(data);
+
                 page1.classList.add('hidden');
                 page2.classList.remove('hidden');
 
@@ -274,8 +349,25 @@
                 page1.classList.remove('hidden');
             });
 
+            salinBtn.addEventListener('click', () => {
+                const narasiText = narasiDisplay.textContent;
+                const textArea = document.createElement('textarea');
+                textArea.value = narasiText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                const originalText = salinBtn.textContent;
+                salinBtn.textContent = 'Tersalin!';
+                salinBtn.disabled = true;
+                setTimeout(() => {
+                    salinBtn.textContent = originalText;
+                    salinBtn.disabled = false;
+                }, 2000);
+            });
+
         });
     </script>
 </body>
 </html>
-
