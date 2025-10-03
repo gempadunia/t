@@ -40,7 +40,7 @@
             <form id="manualGempaForm" class="space-y-4">
                 <div>
                     <label for="csvData" class="form-label">Data Gempa</label>
-                    <textarea id="csvData" name="csvData" rows="3" class="form-input" placeholder="mag,kedalaman,waktu,lat,long,lokasi&#10;5.4,10.0,2024-09-24T12:54:00Z,-7.5,110.5,&quot;135 km BaratDaya Semarang&quot;"></textarea>
+                    <textarea id="csvData" name="csvData" rows="3" class="form-input" placeholder="mag,kedalaman,waktu,lat,long,lokasi&#10;5.4,10.0,2024-09-24T16:54:00,-7.5,110.5,&quot;135 km BaratDaya Semarang&quot;"></textarea>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -197,7 +197,7 @@
             function formatWaktu(isoString, format = 'narasi') {
                 if (!isoString) return 'Waktu Tidak Valid';
                 
-                const wibMoment = moment(isoString).add(7, 'hours');
+                const wibMoment = moment(isoString);
                 
                 if (!wibMoment.isValid()) {
                     return 'Waktu Tidak Valid';
@@ -308,7 +308,7 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 const data = {
                     magnitude: parseFloat(parts[0]),
                     kedalaman: parseFloat(parts[1]),
-                    waktu: parts[2], // This should be an ISO 8601 string e.g. "2024-09-24T12:54:00Z"
+                    waktu: parts[2], // This is already WIB as per user's request
                     lat: parseFloat(parts[3]),
                     lng: parseFloat(parts[4]),
                     detailLokasi: parts.slice(5).join(',').replace(/"/g, ''), 
