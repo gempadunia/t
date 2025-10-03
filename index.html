@@ -11,7 +11,11 @@
     <!-- LeafletJS for Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-     
+    
+    <!-- Moment.js for robust date/time handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/id.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
         body {
@@ -25,7 +29,6 @@
         .form-input {
             @apply mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
         }
-        /* Style for table rows */
         .quake-row:hover {
             background-color: #f0f9ff;
             cursor: pointer;
@@ -80,12 +83,12 @@
             
             <div id="quake-table-container" class="hidden overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-100">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Magnitudo</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu (WIB)</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kedalaman</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Magnitudo</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Wilayah/Waktu (UTC)</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Kedalaman</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">MT</th>
                         </tr>
                     </thead>
                     <tbody id="quake-table-body" class="bg-white divide-y divide-gray-200"></tbody>
@@ -101,6 +104,10 @@
             <p id="modal-quake-info" class="text-center text-gray-600 mb-6"></p>
             <form id="modalForm" class="space-y-4">
                 <input type="hidden" id="modal-data-storage">
+                <div>
+                    <label for="manual-time" class="form-label">Waktu WIB Manual (HH:MM:SS)</label>
+                    <input type="text" id="manual-time" name="manual_time" class="form-input" placeholder="16:00:00">
+                </div>
                  <div>
                     <label for="tsunami" class="form-label">Potensi Tsunami</label>
                     <select id="tsunami" name="tsunami" class="form-input">
@@ -203,6 +210,8 @@
 
     <script>
         window.addEventListener('load', () => {
+            moment.locale('id');
+
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
             const modal = document.getElementById('modal');
@@ -271,33 +280,37 @@
                     tableBody.innerHTML = ''; 
                     for (let i = 0; i < events.length; i++) {
                         const event = events[i];
+                        const eventid = event.getElementsByTagName("eventid")[0].textContent;
                         const mag = event.getElementsByTagName("mag")[0].textContent;
                         const depth = event.getElementsByTagName("dalam")[0].textContent;
-                        const time = event.getElementsByTagName("waktu")[0].textContent;
+                        const timeUTC = event.getElementsByTagName("waktu")[0].textContent;
                         const lat = event.getElementsByTagName("lintang")[0].textContent;
                         const lon = event.getElementsByTagName("bujur")[0].textContent;
                         const area = event.getElementsByTagName("area")[0].textContent;
+                        const status = event.getElementsByTagName("status")[0].textContent;
+                        const fokal = event.getElementsByTagName("fokal")[0].textContent;
                         
-                        const date = new Date(time);
-                        const wibTime = new Intl.DateTimeFormat('id-ID', {
-                            year: 'numeric', month: '2-digit', day: '2-digit',
-                            hour: '2-digit', minute: '2-digit', second: '2-digit',
-                            timeZone: 'Asia/Jakarta', hour12: false
-                        }).format(date);
+                        let mtCell = '<td>-</td>';
+                        if (fokal === 'mt_yes') {
+                            mtCell = `<td><img width='40' src='https://bmkg-content-inatews.storage.googleapis.com/mt.${eventid}.png'></td>`;
+                        }
 
                         const row = document.createElement('tr');
-                        row.className = 'quake-row';
+                        row.className = 'quake-row align-middle';
                         row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap"><span class="font-bold text-lg text-red-600">M${mag}</span></td>
-                            <td class="px-6 py-4 whitespace-nowrap">${wibTime.replace(/\./g,':')}</td>
-                            <td class="px-6 py-4">${area}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${depth} Km</td>
+                            <td class="px-4 py-4 text-center"><h5 class="text-red-600 font-bold text-lg">M${mag}</h5></td>
+                            <td class="px-6 py-4">
+                                <div>${area}</div>
+                                <div class="text-gray-500 text-sm">${timeUTC} <i class="text-gray-400">(${status})</i></div>
+                            </td>
+                            <td class="px-4 py-4 text-center">${depth} Km</td>
+                            <td class="px-4 py-4 text-center">${mtCell.replace(/<\/?td>/g, '')}</td>
                         `;
                         
                         const quakeData = {
                             magnitude: parseFloat(mag),
                             kedalaman: parseFloat(depth),
-                            waktu: time,
+                            waktu: timeUTC, // Keep original UTC string
                             lat: parseFloat(lat),
                             lng: parseFloat(lon),
                             detailLokasi: area,
@@ -320,35 +333,38 @@
                 }
             }
 
-            function formatWaktuISO(isoString) {
-                if (!isoString) return '';
-                const date = new Date(isoString);
-                const options = { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
-                const formatter = new Intl.DateTimeFormat('id-ID', options);
-                const parts = formatter.formatToParts(date);
-                let day = parts.find(p => p.type === 'day').value;
-                let month = parts.find(p => p.type === 'month').value;
-                let year = parts.find(p => p.type === 'year').value;
-                let hour = parts.find(p => p.type === 'hour').value;
-                let minute = parts.find(p => p.type === 'minute').value;
-                let second = parts.find(p => p.type === 'second').value;
-                return `${day} ${month} ${year} ${hour}:${minute}:${second} WIB`;
+            function formatWaktu(waktu, manualTime) {
+                 // Prioritize manual time input
+                if (manualTime && manualTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
+                    const datePart = moment(waktu).format('DD MMMM YYYY');
+                    return `${datePart}<br>${manualTime} WIB`;
+                }
+
+                // Fallback to automatic conversion if manual is empty or invalid
+                const wibMoment = moment(waktu.replace(/\//g, '-').replace(' ', 'T') + 'Z').add(7, 'hours');
+                if (wibMoment.isValid()) {
+                    return `${wibMoment.format('DD MMMM YYYY')}<br>${wibMoment.format('HH:mm:ss')} WIB`;
+                } else {
+                    return "Waktu Tidak Valid";
+                }
             }
             
-            function formatWaktuTampilan(isoString) {
-                if (!isoString) return '';
-                const date = new Date(isoString);
-                const dateOptions = { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' };
-                const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
-                const formattedDate = new Intl.DateTimeFormat('id-ID', dateOptions).format(date);
-                const formattedTime = new Intl.DateTimeFormat('id-ID', timeOptions).format(date).replace(/\./g,':');
-                return `${formattedDate}<br>${formattedTime} WIB`;
+             function formatWaktuNarasi(waktu, manualTime) {
+                if (manualTime && manualTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
+                     const datePart = moment(waktu).format('DD MMMM YYYY');
+                    return `${datePart} ${manualTime} WIB`;
+                }
+                 const wibMoment = moment(waktu.replace(/\//g, '-').replace(' ', 'T') + 'Z').add(7, 'hours');
+                 if (wibMoment.isValid()) {
+                    return wibMoment.format('DD MMMM YYYY HH:mm:ss') + ' WIB';
+                 } else {
+                    return "Waktu Tidak Valid";
+                 }
             }
 
+
             function getCurrentWIBTime() {
-                const now = new Date();
-                const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
-                return new Intl.DateTimeFormat('id-ID', options).format(now).replace(/\./g, ':').replace(/,/g, ' ');
+                return moment().utcOffset('+07:00').format('DD/MM/YYYY HH:mm');
             }
             
             function generateNarasi(data) {
@@ -358,7 +374,7 @@
 
 Kedalaman = ${data.kedalaman} Kilometer
 Lokasi = ${data.detailLokasi}
-Waktu = ${formatWaktuISO(data.waktu)}
+Waktu = ${formatWaktuNarasi(data.waktu, data.manual_time)}
 Sumber Gempa = ?
 Guncangan Maksimum = ${data.guncangan} MMI
 Potensi Tsunami = ${data.tsunami}
@@ -377,9 +393,9 @@ Dipublikasikan pada ${publishedTime} WIB`;
             }
             
             function displayGempa(data) {
-                 document.getElementById('display-magnitude').textContent = data.magnitude.toFixed(1);
+                document.getElementById('display-magnitude').textContent = data.magnitude.toFixed(1);
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
-                document.getElementById('display-waktu').innerHTML = formatWaktuTampilan(data.waktu);
+                document.getElementById('display-waktu').innerHTML = formatWaktu(data.waktu, data.manual_time);
                 document.getElementById('display-koordinat').textContent = `${Math.abs(data.lat)} ${data.lat >= 0 ? 'LU' : 'LS'}, ${Math.abs(data.lng)} ${data.lng >= 0 ? 'BT' : 'BB'}`;
                 document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
                 document.getElementById('display-guncangan').textContent = `${data.guncangan} MMI`;
@@ -455,7 +471,7 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 const data = {
                     magnitude: parseFloat(parts[0]),
                     kedalaman: parseFloat(parts[1]),
-                    waktu: parts[2],
+                    waktu: parts[2], // This should be an ISO 8601 string e.g. "2024-09-24T12:54:00Z"
                     lat: parseFloat(parts[3]),
                     lng: parseFloat(parts[4]),
                     detailLokasi: parts.slice(5).join(',').replace(/"/g, ''), 
