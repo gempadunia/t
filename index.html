@@ -29,17 +29,12 @@
         .form-input {
             @apply mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
         }
-        .quake-row:hover {
-            background-color: #f0f9ff;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <!-- PAGE 1: Manual Input and BMKG List -->
-    <div id="page1" class="w-full max-w-4xl mx-auto space-y-8">
-        <!-- Manual Input Section -->
+    <!-- PAGE 1: Manual Input -->
+    <div id="page1" class="w-full max-w-lg mx-auto">
         <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Input Gempa Manual (CSV)</h1>
             <form id="manualGempaForm" class="space-y-4">
@@ -71,66 +66,7 @@
                 </div>
             </form>
         </div>
-
-        <!-- BMKG Live Data Section -->
-        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200">
-            <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Gempa Bumi Terkini (BMKG)</h1>
-            <p class="text-center text-gray-500 mb-6">Klik salah satu gempa untuk memvisualisasikan.</p>
-            
-            <div id="loading" class="text-center py-8">
-                <p class="text-lg text-gray-600">Memuat data gempa...</p>
-            </div>
-            
-            <div id="quake-table-container" class="hidden overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Magnitudo</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Wilayah/Waktu (UTC)</th>
-                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Kedalaman</th>
-                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">MT</th>
-                        </tr>
-                    </thead>
-                    <tbody id="quake-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                </table>
-            </div>
-        </div>
     </div>
-
-    <!-- MODAL FOR BMKG DATA -->
-    <div id="modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-4">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-md">
-            <h2 class="text-xl font-bold text-center mb-4">Informasi Tambahan</h2>
-            <p id="modal-quake-info" class="text-center text-gray-600 mb-6"></p>
-            <form id="modalForm" class="space-y-4">
-                <input type="hidden" id="modal-data-storage">
-                <div>
-                    <label for="manual-time" class="form-label">Waktu WIB Manual (HH:MM:SS)</label>
-                    <input type="text" id="manual-time" name="manual_time" class="form-input" placeholder="16:00:00">
-                </div>
-                 <div>
-                    <label for="tsunami" class="form-label">Potensi Tsunami</label>
-                    <select id="tsunami" name="tsunami" class="form-input">
-                        <option>Tidak Berpotensi Tsunami</option>
-                        <option>BERPOTENSI TSUNAMI</option>
-                    </select>
-                </div>
-                 <div>
-                    <label for="guncangan" class="form-label">Guncangan (MMI)</label>
-                    <select id="guncangan" name="guncangan" class="form-input">
-                        <option>I</option> <option>II-III</option> <option>IV</option> <option>V</option>
-                        <option>VI</option> <option>VII</option> <option>VIII</option> <option>IX</option>
-                        <option>X+</option>
-                    </select>
-                </div>
-                <div class="pt-4 flex gap-4">
-                    <button type="button" id="cancel-btn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg">Batal</button>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Submit</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 
     <!-- PAGE 2: DISPLAY INFO -->
     <div id="page2" class="hidden w-full md:max-w-2xl mx-auto">
@@ -214,10 +150,7 @@
 
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
-            const modal = document.getElementById('modal');
-            const modalForm = document.getElementById('modalForm');
             const manualGempaForm = document.getElementById('manualGempaForm');
-            const cancelBtn = document.getElementById('cancel-btn');
             const backBtn = document.getElementById('back-btn');
             const salinBtn = document.getElementById('salin-btn');
             const narasiDisplay = document.getElementById('narasi-gempa');
@@ -261,107 +194,23 @@
                 'X+':     { bg: '#ba0000', text: 'text-white' },
             };
             
-            async function fetchBMKGData() {
-                const loadingDiv = document.getElementById('loading');
-                const tableContainer = document.getElementById('quake-table-container');
-                const tableBody = document.getElementById('quake-table-body');
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const apiUrl = 'https://bmkg-content-inatews.storage.googleapis.com/live30event.xml';
-
-                try {
-                    const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    
-                    const xmlText = await response.text();
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-                    const events = xmlDoc.getElementsByTagName("gempa"); 
-
-                    tableBody.innerHTML = ''; 
-                    for (let i = 0; i < events.length; i++) {
-                        const event = events[i];
-                        const eventid = event.getElementsByTagName("eventid")[0].textContent;
-                        const mag = event.getElementsByTagName("mag")[0].textContent;
-                        const depth = event.getElementsByTagName("dalam")[0].textContent;
-                        const timeUTC = event.getElementsByTagName("waktu")[0].textContent;
-                        const lat = event.getElementsByTagName("lintang")[0].textContent;
-                        const lon = event.getElementsByTagName("bujur")[0].textContent;
-                        const area = event.getElementsByTagName("area")[0].textContent;
-                        const status = event.getElementsByTagName("status")[0].textContent;
-                        const fokal = event.getElementsByTagName("fokal")[0].textContent;
-                        
-                        let mtCell = '<td>-</td>';
-                        if (fokal === 'mt_yes') {
-                            mtCell = `<td><img width='40' src='https://bmkg-content-inatews.storage.googleapis.com/mt.${eventid}.png'></td>`;
-                        }
-
-                        const row = document.createElement('tr');
-                        row.className = 'quake-row align-middle';
-                        row.innerHTML = `
-                            <td class="px-4 py-4 text-center"><h5 class="text-red-600 font-bold text-lg">M${mag}</h5></td>
-                            <td class="px-6 py-4">
-                                <div>${area}</div>
-                                <div class="text-gray-500 text-sm">${timeUTC} <i class="text-gray-400">(${status})</i></div>
-                            </td>
-                            <td class="px-4 py-4 text-center">${depth} Km</td>
-                            <td class="px-4 py-4 text-center">${mtCell.replace(/<\/?td>/g, '')}</td>
-                        `;
-                        
-                        const quakeData = {
-                            magnitude: parseFloat(mag),
-                            kedalaman: parseFloat(depth),
-                            waktu: timeUTC, // Keep original UTC string
-                            lat: parseFloat(lat),
-                            lng: parseFloat(lon),
-                            detailLokasi: area,
-                        };
-                        row.dataset.quakeInfo = JSON.stringify(quakeData);
-
-                        row.addEventListener('click', () => {
-                            document.getElementById('modal-quake-info').textContent = `M${quakeData.magnitude} di ${quakeData.detailLokasi}`;
-                            document.getElementById('modal-data-storage').value = row.dataset.quakeInfo;
-                            modal.classList.remove('hidden');
-                        });
-                        
-                        tableBody.appendChild(row);
-                    }
-                    loadingDiv.classList.add('hidden');
-                    tableContainer.classList.remove('hidden');
-                } catch (error) {
-                    loadingDiv.innerHTML = `<p class="text-red-500">Gagal memuat data gempa. Silakan coba lagi nanti.</p>`;
-                    console.error("Error fetching BMKG data:", error);
-                }
-            }
-
-            function formatWaktu(waktu, manualTime) {
-                 // Prioritize manual time input
-                if (manualTime && manualTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
-                    const datePart = moment(waktu).format('DD MMMM YYYY');
-                    return `${datePart}<br>${manualTime} WIB`;
+            function formatWaktu(isoString, format = 'narasi') {
+                if (!isoString) return 'Waktu Tidak Valid';
+                
+                const wibMoment = moment(isoString).add(7, 'hours');
+                
+                if (!wibMoment.isValid()) {
+                    return 'Waktu Tidak Valid';
                 }
 
-                // Fallback to automatic conversion if manual is empty or invalid
-                const wibMoment = moment(waktu.replace(/\//g, '-').replace(' ', 'T') + 'Z').add(7, 'hours');
-                if (wibMoment.isValid()) {
-                    return `${wibMoment.format('DD MMMM YYYY')}<br>${wibMoment.format('HH:mm:ss')} WIB`;
-                } else {
-                    return "Waktu Tidak Valid";
-                }
-            }
-            
-             function formatWaktuNarasi(waktu, manualTime) {
-                if (manualTime && manualTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
-                     const datePart = moment(waktu).format('DD MMMM YYYY');
-                    return `${datePart} ${manualTime} WIB`;
-                }
-                 const wibMoment = moment(waktu.replace(/\//g, '-').replace(' ', 'T') + 'Z').add(7, 'hours');
-                 if (wibMoment.isValid()) {
+                if (format === 'tampilan') {
+                    const formattedDate = wibMoment.format('DD MMMM YYYY');
+                    const formattedTime = wibMoment.format('HH:mm:ss');
+                    return `${formattedDate}<br>${formattedTime} WIB`;
+                } else { // 'narasi' format
                     return wibMoment.format('DD MMMM YYYY HH:mm:ss') + ' WIB';
-                 } else {
-                    return "Waktu Tidak Valid";
-                 }
+                }
             }
-
 
             function getCurrentWIBTime() {
                 return moment().utcOffset('+07:00').format('DD/MM/YYYY HH:mm');
@@ -374,7 +223,7 @@
 
 Kedalaman = ${data.kedalaman} Kilometer
 Lokasi = ${data.detailLokasi}
-Waktu = ${formatWaktuNarasi(data.waktu, data.manual_time)}
+Waktu = ${formatWaktu(data.waktu, 'narasi')}
 Sumber Gempa = ?
 Guncangan Maksimum = ${data.guncangan} MMI
 Potensi Tsunami = ${data.tsunami}
@@ -395,7 +244,7 @@ Dipublikasikan pada ${publishedTime} WIB`;
             function displayGempa(data) {
                 document.getElementById('display-magnitude').textContent = data.magnitude.toFixed(1);
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
-                document.getElementById('display-waktu').innerHTML = formatWaktu(data.waktu, data.manual_time);
+                document.getElementById('display-waktu').innerHTML = formatWaktu(data.waktu, 'tampilan');
                 document.getElementById('display-koordinat').textContent = `${Math.abs(data.lat)} ${data.lat >= 0 ? 'LU' : 'LS'}, ${Math.abs(data.lng)} ${data.lng >= 0 ? 'BT' : 'BB'}`;
                 document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
                 document.getElementById('display-guncangan').textContent = `${data.guncangan} MMI`;
@@ -441,18 +290,6 @@ Dipublikasikan pada ${publishedTime} WIB`;
 
             // --- EVENT LISTENERS ---
 
-            // For BMKG data (modal)
-            modalForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(modalForm);
-                const manualData = Object.fromEntries(formData.entries());
-                const storedData = JSON.parse(document.getElementById('modal-data-storage').value);
-                const finalData = { ...storedData, ...manualData };
-                
-                modal.classList.add('hidden');
-                displayGempa(finalData);
-            });
-
             // For Manual CSV data
             manualGempaForm.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -481,10 +318,6 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 
                 displayGempa(data);
             });
-
-            cancelBtn.addEventListener('click', () => {
-                modal.classList.add('hidden');
-            });
             
             backBtn.addEventListener('click', () => {
                 page2.classList.add('hidden');
@@ -509,8 +342,6 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 }, 2000);
             });
             
-            // Fetch the data when the page loads
-            fetchBMKGData();
         });
     </script>
 </body>
