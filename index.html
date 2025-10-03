@@ -156,7 +156,7 @@
             const narasiDisplay = document.getElementById('narasi-gempa');
             
             const map = L.map('map', { zoomControl: false }).setView([-2.548926, 118.0148634], 5);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
             }).addTo(map);
