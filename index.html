@@ -77,7 +77,12 @@
                     <p class="text-sm sm:text-base text-gray-500">@gempa.dunia</p>
                 </header>
                 
-                <div id="map" class="w-full rounded-lg border border-gray-200 shadow-inner"></div>
+                <div id="map" class="w-full rounded-lg border border-gray-200 shadow-inner relative">
+                    <!-- Logo Organisasi -->
+                    <div style="position: absolute; bottom: 10px; left: 10px; z-index: 1000;">
+                        <img src="logo.png" alt="Logo" style="width: 64px; height: 64px;" onerror="this.parentElement.style.display='none'">
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 mt-4">
                     <div id="magnitude-container" class="md-col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center">
@@ -158,7 +163,7 @@
             const map = L.map('map', { zoomControl: false }).setView([-2.548926, 118.0148634], 5);
             L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
                 maxZoom: 19,
-                attribution: '© ESRI'
+                attribution: 'ESRI'
             }).addTo(map);
 
             const epicenterIconSVG = `
@@ -346,5 +351,4 @@ Dipublikasikan pada ${publishedTime} WIB`;
     </script>
 </body>
 </html>
-
 
