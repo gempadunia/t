@@ -16,18 +16,71 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/id.js"></script>
 
+    <!-- html2canvas for High-Res Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* Container laporan utama - Menyudut */
+        #report-container {
+            position: relative;
+            width: 100%;
+            height: 950px; 
+            overflow: hidden;
+            border-radius: 0; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
             background-color: #ffffff;
         }
-        #map { height: 400px; }
+
+        #map { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 2rem;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            pointer-events: auto;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
         .form-label {
             @apply block text-sm font-medium text-gray-700 mb-1;
         }
         .form-input {
             @apply mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+        }
+
+        .detail-label {
+            @apply text-gray-500 text-sm font-bold uppercase tracking-wider mb-0.5;
+        }
+        .detail-value-primary {
+            @apply text-gray-900 text-lg font-medium leading-tight;
+        }
+        .detail-value-secondary {
+            @apply text-gray-600 text-base font-normal;
         }
     </style>
 </head>
@@ -35,11 +88,11 @@
 
     <!-- PAGE 1: Manual Input -->
     <div id="page1" class="w-full max-w-lg mx-auto">
-        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-xl">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Input Gempa Manual (CSV)</h1>
             <form id="manualGempaForm" class="space-y-4">
                 <div>
-                    <label for="csvData" class="form-label">Data Gempa</label>
+                    <label for="csvData" class="form-label">Data Gempa (mag,kedalaman,waktu,lat,long,lokasi)</label>
                     <textarea id="csvData" name="csvData" rows="3" class="form-input" placeholder="mag,kedalaman,waktu,lat,long,lokasi&#10;5.4,10.0,2024-09-24T16:54:00,-7.5,110.5,&quot;135 km BaratDaya Semarang&quot;"></textarea>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -69,80 +122,98 @@
     </div>
 
     <!-- PAGE 2: DISPLAY INFO -->
-    <div id="page2" class="hidden w-full md:max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div id="report-container" class="bg-white p-4 sm:p-6" style="position: relative;">
-                <header class="text-center mb-4">
-                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Informasi Gempa Terkini</h2>
-                    <p class="text-sm sm:text-base text-gray-500">@gempa.dunia</p>
-                </header>
-                
-                <div id="map" class="w-full rounded-lg border border-gray-200 shadow-inner relative">
-                    <!-- Logo Organisasi -->
-                    <div style="position: absolute; bottom: 10px; left: 10px; z-index: 1000;">
-                        <img src="logo.png" alt="Logo" style="width: 64px; height: 64px;" onerror="this.parentElement.style.display='none'">
-                    </div>
-                </div>
+    <div id="page2" class="hidden w-full md:max-w-3xl mx-auto space-y-6">
+        <div id="report-container" class="bg-white">
+            <!-- Peta Backdrop -->
+            <div id="map"></div>
+            
+            <!-- Logo Custom -->
+            <img src="logo.png" id="export-logo" alt="Logo" crossorigin="anonymous" style="position: absolute; bottom: 130px; left: 25px; z-index: 5; width: 72px; height: 72px;" onerror="this.style.display='none'">
 
-                <div class="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 mt-4">
-                    <div id="magnitude-container" class="md-col-span-1 text-white rounded-xl flex flex-col items-center justify-center p-4 text-center">
-                        <h3 class="font-bold text-lg uppercase tracking-wider">Magnitudo</h3>
-                        <p id="display-magnitude" class="text-[90px] font-black leading-none">2.1</p>
+            <!-- Overlay Komposisi -->
+            <div class="content-overlay">
+                <!-- Header -->
+                <header class="glass-panel p-5 mb-4 text-center">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight">Informasi Gempa Terkini</h2>
+                    <p class="text-sm sm:text-lg text-gray-500 font-medium">@gempa.dunia</p>
+                </header>
+
+                <div class="flex-grow"></div>
+
+                <!-- Main Info Section -->
+                <div class="grid grid-cols-1 md:grid-cols-[1.2fr_2.8fr] gap-5 items-stretch">
+                    <div id="magnitude-container" class="glass-panel flex flex-col items-center justify-center p-6 text-center">
+                        <h3 class="font-bold text-lg uppercase tracking-widest opacity-80">Magnitudo</h3>
+                        <p id="display-magnitude" class="text-[100px] font-black leading-none py-2">0.0</p>
                     </div>
                     
-                    <div class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)] gap-x-4 gap-y-6">
-                            <div class="flex items-start space-x-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <div class="glass-panel p-7">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-gray-100 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">Waktu</h4>
-                                    <p id="display-waktu" class="text-gray-600"></p>
+                                    <h4 class="detail-label">Waktu</h4>
+                                    <p id="display-waktu" class="detail-value-primary"></p>
                                 </div>
                             </div>
-                             <div class="flex items-start space-x-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 12.343l-3.535 3.536m-2.829-2.829l-3.535 3.536m-2.121-2.121L3 17.25m18-10.5L3 6.75m18 0l-3.535 3.536" /></svg>
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-gray-100 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 12.343l-3.535 3.536m-2.829-2.829l-3.535 3.536m-2.121-2.121L3 17.25m18-10.5L3 6.75m18 0l-3.535 3.536" /></svg>
+                                </div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">Kedalaman</h4>
-                                    <p id="display-kedalaman" class="text-gray-600"></p>
+                                    <h4 class="detail-label">Kedalaman</h4>
+                                    <p id="display-kedalaman" class="detail-value-primary"></p>
                                 </div>
                             </div>
-                            <div class="flex items-start space-x-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-gray-100 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                </div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">Lokasi</h4>
-                                    <p id="display-koordinat" class="text-gray-600"></p>
-                                    <p id="display-detailLokasi" class="text-gray-600 font-semibold"></p>
+                                    <h4 class="detail-label">Lokasi</h4>
+                                    <p id="display-koordinat" class="detail-value-secondary mb-1"></p>
+                                    <p id="display-detailLokasi" class="detail-value-primary"></p>
                                 </div>
                             </div>
-                            <div class="flex items-start space-x-3">
-                               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                            <div class="flex items-start space-x-4">
+                                <div class="bg-gray-100 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                </div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">Estimasi Guncangan</h4>
-                                    <p id="display-guncangan" class="text-gray-600 font-semibold"></p>
+                                    <h4 class="detail-label">Estimasi Guncangan</h4>
+                                    <p id="display-guncangan" class="detail-value-primary"></p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-4">
-                    <p id="display-tsunami" class="w-full font-bold text-3xl p-3 rounded-lg text-center"></p>
+
+                <!-- Tsunami Banner -->
+                <div class="mt-5 pointer-events-auto">
+                    <p id="display-tsunami" class="w-full font-black text-3xl p-5 rounded-2xl text-center shadow-xl uppercase tracking-widest"></p>
                 </div>
             </div>
         </div>
         
-        <div class="mt-6 w-full md:max-w-2xl mx-auto">
-            <div class="bg-white p-4 rounded-xl border border-gray-200">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-lg text-gray-800">Narasi Gempabumi</h3>
-                    <button id="salin-btn" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-lg transition-colors">
+        <!-- Narasi & Action Buttons -->
+        <div class="space-y-4 px-2">
+            <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-xl text-gray-800">Narasi Gempabumi</h3>
+                    <button id="salin-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1.5 px-4 rounded-full transition-all shadow-md">
                         Salin Narasi
                     </button>
                 </div>
-                <pre id="narasi-gempa" class="whitespace-pre-wrap text-sm text-gray-700 font-sans bg-gray-50 p-3 rounded"></pre>
+                <pre id="narasi-gempa" class="whitespace-pre-wrap text-sm text-gray-700 font-sans bg-gray-50 p-4 rounded-xl border border-gray-100"></pre>
             </div>
 
-            <div class="mt-6 flex justify-center">
-                <button id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+            <div class="flex flex-col sm:flex-row justify-center gap-4 pb-12">
+                <button id="export-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all hover:scale-105">
+                    Export ke JPG (300 PPI)
+                </button>
+                <button id="back-btn" class="bg-gray-800 hover:bg-black text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all hover:scale-105">
                     Kembali ke Form
                 </button>
             </div>
@@ -158,61 +229,64 @@
             const manualGempaForm = document.getElementById('manualGempaForm');
             const backBtn = document.getElementById('back-btn');
             const salinBtn = document.getElementById('salin-btn');
+            const exportBtn = document.getElementById('export-btn');
             const narasiDisplay = document.getElementById('narasi-gempa');
             
-            const map = L.map('map', { zoomControl: false }).setView([-2.548926, 118.0148634], 5);
+            // Peta Setup dengan Perbaikan CORS
+            const map = L.map('map', { 
+                zoomControl: false,
+                attributionControl: false,
+                fadeAnimation: false // Menonaktifkan animasi agar tangkapan layar lebih akurat
+            }).setView([-2.548926, 118.0148634], 5);
+            
             L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
-                maxZoom: 19,
-                attribution: 'ESRI'
+                maxZoom: 16,
+                crossOrigin: true // PENTING: Mengizinkan html2canvas mengakses tile gambar
             }).addTo(map);
 
+            L.control.attribution({position: 'bottomright'}).addAttribution('ESRI').addTo(map);
+
             const epicenterIconSVG = `
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
-                    <circle cx="50" cy="50" r="45" fill="#ff0000" stroke="#fff" stroke-width="5"/>
-                    <path d="M25,50 h10 l5,-15 l10,30 l10,-30 l5,15 h10" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="56" height="56">
+                    <circle cx="50" cy="50" r="42" fill="#ff0000" stroke="#fff" stroke-width="5" opacity="0.95"/>
+                    <path d="M25,50 h10 l5,-15 l10,30 l10,-30 l5,15 h10" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>`;
             
             const epicenterIcon = L.divIcon({
                 html: epicenterIconSVG,
                 className: '',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
+                iconSize: [56, 56],
+                iconAnchor: [28, 28]
             });
 
             let marker = L.marker([0, 0], { icon: epicenterIcon }).addTo(map);
             let circles = [
-                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.3 }),
-                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.2 }),
-                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.1 })
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 2, fillColor: '#f03', fillOpacity: 0.2 }),
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1.5, fillColor: '#f03', fillOpacity: 0.12 }),
+                L.circle([0, 0], { radius: 0, color: '#ff0000', weight: 1, fillColor: '#f03', fillOpacity: 0.04 })
             ];
             circles.forEach(c => c.addTo(map));
 
             const guncanganColors = {
-                'I':      { bg: '#ffffff', text: 'text-black' },
-                'II-III': { bg: '#8fdaff', text: 'text-black' },
-                'IV':     { bg: '#57f7ff', text: 'text-black' },
-                'V':      { bg: '#95ffa3', text: 'text-black' },
-                'VI':     { bg: '#fceb05', text: 'text-black' },
-                'VII':    { bg: '#ffb401', text: 'text-white' },
-                'VIII':   { bg: '#ff6f01', text: 'text-white' },
-                'IX':     { bg: '#ff0109', text: 'text-white' },
-                'X+':     { bg: '#ba0000', text: 'text-white' },
+                'I':      { bg: 'rgba(255, 255, 255, 0.96)', text: 'text-black' },
+                'II-III': { bg: 'rgba(143, 250, 255, 0.96)', text: 'text-black' },
+                'IV':     { bg: 'rgba(87, 247, 255, 0.96)', text: 'text-black' },
+                'V':      { bg: 'rgba(149, 255, 163, 0.96)', text: 'text-black' },
+                'VI':     { bg: 'rgba(252, 235, 5, 0.96)',   text: 'text-black' },
+                'VII':    { bg: 'rgba(255, 180, 1, 0.96)',   text: 'text-white' },
+                'VIII':   { bg: 'rgba(255, 111, 1, 0.96)',   text: 'text-white' },
+                'IX':     { bg: 'rgba(255, 1, 9, 0.96)',     text: 'text-white' },
+                'X+':     { bg: 'rgba(186, 0, 0, 0.96)',     text: 'text-white' },
             };
             
             function formatWaktu(isoString, format = 'narasi') {
                 if (!isoString) return 'Waktu Tidak Valid';
-                
                 const wibMoment = moment(isoString);
-                
-                if (!wibMoment.isValid()) {
-                    return 'Waktu Tidak Valid';
-                }
+                if (!wibMoment.isValid()) return 'Waktu Tidak Valid';
 
                 if (format === 'tampilan') {
-                    const formattedDate = wibMoment.format('DD MMMM YYYY');
-                    const formattedTime = wibMoment.format('HH:mm:ss');
-                    return `${formattedDate}<br>${formattedTime} WIB`;
-                } else { // 'narasi' format
+                    return `${wibMoment.format('DD MMMM YYYY')}<br><span class="text-gray-500 font-normal">${wibMoment.format('HH:mm:ss')} WIB</span>`;
+                } else {
                     return wibMoment.format('DD MMMM YYYY HH:mm:ss') + ' WIB';
                 }
             }
@@ -223,7 +297,7 @@
             
             function generateNarasi(data) {
                 const publishedTime = getCurrentWIBTime();
-                const narasi = `M${parseFloat(data.magnitude).toFixed(1)}
+                return `M${parseFloat(data.magnitude).toFixed(1)}
 [PARAMETER AWAL]
 
 Kedalaman = ${data.kedalaman} Kilometer
@@ -239,11 +313,15 @@ Belum Tersedia
 
 Data Oleh ?
 Dipublikasikan pada ${publishedTime} WIB`;
-                return narasi;
             }
 
             function getRadiusByMagnitude(mag) {
-                if (mag < 1) return [2000, 4000, 10000]; if (mag < 2) return [2000, 4000, 10000]; if (mag < 3) return [3000, 6000, 12000]; if (mag < 4) return [4000, 8000, 14000]; if (mag < 5) return [6000, 12000, 30000]; if (mag < 6) return [10000, 20000, 40000]; if (mag < 7) return [20000, 40000, 80000]; if (mag < 8) return [40000, 80000, 120000]; if (mag < 9) return [100000, 200000, 400000]; return [200000, 400000, 800000];
+                if (mag < 1) return [3000, 6000, 15000];
+                if (mag < 4) return [5000, 10000, 20000];
+                if (mag < 6) return [15000, 30000, 60000];
+                if (mag < 7) return [30000, 60000, 120000];
+                if (mag < 8) return [60000, 120000, 200000];
+                return [150000, 300000, 600000];
             }
             
             function displayGempa(data) {
@@ -256,51 +334,44 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 
                 const tsunamiDisplay = document.getElementById('display-tsunami');
                 tsunamiDisplay.textContent = data.tsunami;
-                tsunamiDisplay.classList.remove('bg-green-700', 'text-white', 'bg-red-800');
-                if (data.tsunami === 'BERPOTENSI TSUNAMI') {
-                    tsunamiDisplay.classList.add('bg-red-800', 'text-white');
-                } else {
-                    tsunamiDisplay.classList.add('bg-green-700', 'text-white');
-                }
+                tsunamiDisplay.style.backgroundColor = (data.tsunami === 'BERPOTENSI TSUNAMI') ? '#991b1b' : '#15803d';
+                tsunamiDisplay.style.color = '#ffffff';
 
                 const magnitudeContainer = document.getElementById('magnitude-container');
-                const magTextElements = magnitudeContainer.querySelectorAll('h3, p');
-                const colors = guncanganColors[data.guncangan] || { bg: '#cccccc', text: 'text-black' };
+                const colors = guncanganColors[data.guncangan] || { bg: 'rgba(220, 220, 220, 0.96)', text: 'text-black' };
                 magnitudeContainer.style.backgroundColor = colors.bg;
+                
+                const magTextElements = magnitudeContainer.querySelectorAll('h3, p');
                 magTextElements.forEach(el => {
                     el.classList.remove('text-white', 'text-black');
                     el.classList.add(colors.text);
                 });
 
                 narasiDisplay.textContent = generateNarasi(data);
-
                 page1.classList.add('hidden');
                 page2.classList.remove('hidden');
 
                 setTimeout(() => {
                     map.invalidateSize();
-                    map.setView([data.lat, data.lng], 7);
-                    marker.setLatLng([data.lat, data.lng]);
+                    const targetLatLng = [data.lat, data.lng];
+                    map.setView(targetLatLng, 7);
+                    marker.setLatLng(targetLatLng);
                     const radii = getRadiusByMagnitude(data.magnitude);
                     circles.forEach((circle, index) => {
-                        circle.setLatLng([data.lat, data.lng]);
+                        circle.setLatLng(targetLatLng);
                         circle.setRadius(radii[index]);
                     });
                     
                     let maxRadius = Math.max(...radii);
                     let zoomLevel = 11 - Math.log(maxRadius / 1000) / Math.log(2);
-                    map.setView([data.lat, data.lng], Math.max(5, Math.min(13, zoomLevel)));
+                    map.setView(targetLatLng, Math.max(5, Math.min(13, Math.round(zoomLevel))));
                 }, 200);
             }
 
-            // --- EVENT LISTENERS ---
-
-            // For Manual CSV data
             manualGempaForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const formData = new FormData(manualGempaForm);
                 const rawData = Object.fromEntries(formData.entries());
-
                 const csvLines = rawData.csvData.split('\n');
                 const csvData = csvLines[csvLines.length - 1]; 
                 const parts = csvData.match(/(?:[^\s,"]+|"[^"]*")+/g);
@@ -313,14 +384,13 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 const data = {
                     magnitude: parseFloat(parts[0]),
                     kedalaman: parseFloat(parts[1]),
-                    waktu: parts[2], // This is already WIB as per user's request
+                    waktu: parts[2], 
                     lat: parseFloat(parts[3]),
                     lng: parseFloat(parts[4]),
                     detailLokasi: parts.slice(5).join(',').replace(/"/g, ''), 
                     tsunami: rawData.tsunami,
                     guncangan: rawData.guncangan
                 };
-                
                 displayGempa(data);
             });
             
@@ -346,9 +416,49 @@ Dipublikasikan pada ${publishedTime} WIB`;
                     salinBtn.disabled = false;
                 }, 2000);
             });
-            
+
+            // PERBAIKAN LOGIKA EXPORT
+            exportBtn.addEventListener('click', () => {
+                const reportElement = document.getElementById('report-container');
+                const originalText = exportBtn.textContent;
+                exportBtn.textContent = "Mengekspor...";
+                exportBtn.disabled = true;
+
+                // Simulasi 300 PPI: Scale 3.125
+                const scale = 3.125;
+
+                // Tunggu sebentar agar render peta stabil
+                setTimeout(() => {
+                    html2canvas(reportElement, {
+                        scale: scale,
+                        useCORS: true, 
+                        allowTaint: false, // Diset false agar toDataURL tidak error
+                        backgroundColor: "#ffffff",
+                        logging: false,
+                        scrollX: 0,
+                        scrollY: -window.scrollY // Memperbaiki posisi jika halaman di-scroll
+                    }).then(canvas => {
+                        try {
+                            const link = document.createElement('a');
+                            const timestamp = moment().format('YYYYMMDD_HHmmss');
+                            link.download = `Laporan_Gempa_${timestamp}.jpg`;
+                            link.href = canvas.toDataURL('image/jpeg', 0.95); // Kualitas Tinggi
+                            link.click();
+                        } catch (e) {
+                            console.error("Gagal membuat data gambar:", e);
+                            alert("Ekspor gagal karena masalah keamanan gambar eksternal (CORS).");
+                        }
+                        
+                        exportBtn.textContent = originalText;
+                        exportBtn.disabled = false;
+                    }).catch(err => {
+                        console.error("Export Error:", err);
+                        exportBtn.textContent = "Gagal Mengekspor";
+                        exportBtn.disabled = false;
+                    });
+                }, 500);
+            });
         });
     </script>
 </body>
 </html>
-
