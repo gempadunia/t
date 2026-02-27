@@ -283,7 +283,8 @@
                 const wibMoment = moment(isoString);
                 if (!wibMoment.isValid()) return 'Waktu Tidak Valid';
                 if (format === 'tampilan') {
-                    return `${wibMoment.format('DD MMMM YYYY')}<br><span class="text-gray-500 font-normal">${wibMoment.format('HH:mm:ss')} WIB</span>`;
+                    // Gunakan span dengan whitespace-nowrap agar tanggal bulan tahun tidak terpisah
+                    return `<span class="whitespace-nowrap">${wibMoment.format('DD MMMM YYYY')}</span><br><span class="text-gray-500 font-normal whitespace-nowrap">${wibMoment.format('HH:mm:ss')} WIB</span>`;
                 } else {
                     return wibMoment.format('DD MMMM YYYY HH:mm:ss') + ' WIB';
                 }
@@ -326,7 +327,7 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
                 document.getElementById('display-waktu').innerHTML = formatWaktu(data.waktu, 'tampilan');
                 
-                // FORMAT KOORDINAT: 6.83LU-116.26BT
+                // FORMAT KOORDINAT: 6.83LU-116.26BT (Tetap rapat sesuai permintaan sebelumnya)
                 const latStr = `${Math.abs(data.lat)}${data.lat >= 0 ? 'LU' : 'LS'}`;
                 const lngStr = `${Math.abs(data.lng)}${data.lng >= 0 ? 'BT' : 'BB'}`;
                 document.getElementById('display-koordinat').textContent = `${latStr}-${lngStr}`;
