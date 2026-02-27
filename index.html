@@ -140,8 +140,8 @@
 
                 <div class="flex-grow"></div>
 
-                <!-- Main Info Section -->
-                <div class="grid grid-cols-1 md:grid-cols-[1.2fr_2.8fr] gap-5 items-stretch">
+                <!-- Main Info Section - Diperbesar rasio kontainer detail (kanan) -->
+                <div class="grid grid-cols-1 md:grid-cols-[1.0fr_3.0fr] gap-5 items-stretch">
                     <div id="magnitude-container" class="glass-panel flex flex-col items-center justify-center p-6 text-center">
                         <h3 class="font-bold text-lg uppercase tracking-widest opacity-80">Magnitudo</h3>
                         <p id="display-magnitude" class="text-[100px] font-black leading-none py-2">0.0</p>
@@ -223,7 +223,6 @@
     <script>
         window.addEventListener('load', () => {
             moment.locale('id');
-
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
             const manualGempaForm = document.getElementById('manualGempaForm');
@@ -283,7 +282,6 @@
                 if (!isoString) return 'Waktu Tidak Valid';
                 const wibMoment = moment(isoString);
                 if (!wibMoment.isValid()) return 'Waktu Tidak Valid';
-
                 if (format === 'tampilan') {
                     return `${wibMoment.format('DD MMMM YYYY')}<br><span class="text-gray-500 font-normal">${wibMoment.format('HH:mm:ss')} WIB</span>`;
                 } else {
@@ -299,7 +297,6 @@
                 const publishedTime = getCurrentWIBTime();
                 return `M${parseFloat(data.magnitude).toFixed(1)}
 [PARAMETER AWAL]
-
 Kedalaman = ${data.kedalaman} Kilometer
 Lokasi = ${data.detailLokasi}
 Waktu = ${formatWaktu(data.waktu, 'narasi')}
@@ -328,29 +325,29 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 document.getElementById('display-magnitude').textContent = data.magnitude.toFixed(1);
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
                 document.getElementById('display-waktu').innerHTML = formatWaktu(data.waktu, 'tampilan');
-                document.getElementById('display-koordinat').textContent = `${Math.abs(data.lat)} ${data.lat >= 0 ? 'LU' : 'LS'}, ${Math.abs(data.lng)} ${data.lng >= 0 ? 'BT' : 'BB'}`;
+                
+                // FORMAT KOORDINAT: 6.83LU-116.26BT
+                const latStr = `${Math.abs(data.lat)}${data.lat >= 0 ? 'LU' : 'LS'}`;
+                const lngStr = `${Math.abs(data.lng)}${data.lng >= 0 ? 'BT' : 'BB'}`;
+                document.getElementById('display-koordinat').textContent = `${latStr}-${lngStr}`;
+                
                 document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
                 document.getElementById('display-guncangan').textContent = `${data.guncangan} MMI`;
-                
-                const tsunamiDisplay = document.getElementById('display-tsunami');
+                                const tsunamiDisplay = document.getElementById('display-tsunami');
                 tsunamiDisplay.textContent = data.tsunami;
                 tsunamiDisplay.style.backgroundColor = (data.tsunami === 'BERPOTENSI TSUNAMI') ? '#991b1b' : '#15803d';
                 tsunamiDisplay.style.color = '#ffffff';
-
                 const magnitudeContainer = document.getElementById('magnitude-container');
                 const colors = guncanganColors[data.guncangan] || { bg: 'rgba(220, 220, 220, 0.96)', text: 'text-black' };
                 magnitudeContainer.style.backgroundColor = colors.bg;
-                
-                const magTextElements = magnitudeContainer.querySelectorAll('h3, p');
+                                const magTextElements = magnitudeContainer.querySelectorAll('h3, p');
                 magTextElements.forEach(el => {
                     el.classList.remove('text-white', 'text-black');
                     el.classList.add(colors.text);
                 });
-
                 narasiDisplay.textContent = generateNarasi(data);
                 page1.classList.add('hidden');
                 page2.classList.remove('hidden');
-
                 setTimeout(() => {
                     map.invalidateSize();
                     const targetLatLng = [data.lat, data.lng];
@@ -361,13 +358,11 @@ Dipublikasikan pada ${publishedTime} WIB`;
                         circle.setLatLng(targetLatLng);
                         circle.setRadius(radii[index]);
                     });
-                    
-                    let maxRadius = Math.max(...radii);
+                                        let maxRadius = Math.max(...radii);
                     let zoomLevel = 11 - Math.log(maxRadius / 1000) / Math.log(2);
                     map.setView(targetLatLng, Math.max(5, Math.min(13, Math.round(zoomLevel))));
                 }, 200);
             }
-
             manualGempaForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const formData = new FormData(manualGempaForm);
@@ -375,12 +370,10 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 const csvLines = rawData.csvData.split('\n');
                 const csvData = csvLines[csvLines.length - 1]; 
                 const parts = csvData.match(/(?:[^\s,"]+|"[^"]*")+/g);
-
                 if (!parts || parts.length < 6) {
                     alert('Format CSV tidak valid. Pastikan ada 6 kolom: mag,kedalaman,waktu,lat,long,lokasi');
                     return;
                 }
-
                 const data = {
                     magnitude: parseFloat(parts[0]),
                     kedalaman: parseFloat(parts[1]),
@@ -393,12 +386,10 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 };
                 displayGempa(data);
             });
-            
-            backBtn.addEventListener('click', () => {
+                        backBtn.addEventListener('click', () => {
                 page2.classList.add('hidden');
                 page1.classList.remove('hidden');
             });
-
             salinBtn.addEventListener('click', () => {
                 const narasiText = narasiDisplay.textContent;
                 const textArea = document.createElement('textarea');
@@ -407,7 +398,6 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-
                 const originalText = salinBtn.textContent;
                 salinBtn.textContent = 'Tersalin!';
                 salinBtn.disabled = true;
@@ -416,17 +406,14 @@ Dipublikasikan pada ${publishedTime} WIB`;
                     salinBtn.disabled = false;
                 }, 2000);
             });
-
             // PERBAIKAN LOGIKA EXPORT
             exportBtn.addEventListener('click', () => {
                 const reportElement = document.getElementById('report-container');
                 const originalText = exportBtn.textContent;
                 exportBtn.textContent = "Mengekspor...";
                 exportBtn.disabled = true;
-
                 // Simulasi 300 PPI: Scale 3.125
                 const scale = 3.125;
-
                 // Tunggu sebentar agar render peta stabil
                 setTimeout(() => {
                     html2canvas(reportElement, {
@@ -448,8 +435,7 @@ Dipublikasikan pada ${publishedTime} WIB`;
                             console.error("Gagal membuat data gambar:", e);
                             alert("Ekspor gagal karena masalah keamanan gambar eksternal (CORS).");
                         }
-                        
-                        exportBtn.textContent = originalText;
+                                                exportBtn.textContent = originalText;
                         exportBtn.disabled = false;
                     }).catch(err => {
                         console.error("Export Error:", err);
