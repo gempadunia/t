@@ -25,6 +25,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
+            transition: padding 0.3s ease;
         }
         
         /* Container laporan utama - Menyudut */
@@ -36,6 +37,7 @@
             border-radius: 0; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.15);
             background-color: #ffffff;
+            transition: all 0.3s ease;
         }
 
         #map { 
@@ -84,10 +86,45 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center min-h-screen p-4 transition-all duration-300">
 
-    <!-- PAGE 1: Manual Input -->
-    <div id="page1" class="w-full max-w-lg mx-auto">
+    <!-- PAGE 1: Input Page -->
+    <div id="page1" class="w-full max-w-lg mx-auto flex flex-col gap-8">
+        
+        <!-- Input Gempa BMKG via Text XML -->
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-xl">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Input Data Gempa BMKG (XML)</h1>
+            <form id="bmkgXmlForm" class="space-y-4">
+                <div>
+                    <label for="xmlData" class="form-label">Tempel Data XML BMKG</label>
+                    <textarea id="xmlData" name="xmlData" rows="6" class="form-input font-mono text-xs" placeholder="<gempa>&#10; <waktu>2026/03/04 07:27:06.790</waktu>&#10; <lintang>-2.43</lintang>&#10; <bujur>140.46</bujur>&#10; <dalam>10</dalam>&#10; <mag>2.9</mag>&#10; <area>Near North Coast of West Papua</area>&#10;</gempa>"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="bmkg_tsunami" class="form-label">Potensi Tsunami</label>
+                        <select id="bmkg_tsunami" name="bmkg_tsunami" class="form-input">
+                            <option>Tidak Berpotensi Tsunami</option>
+                            <option>BERPOTENSI TSUNAMI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="bmkg_guncangan" class="form-label">Guncangan (MMI)</label>
+                        <select id="bmkg_guncangan" name="bmkg_guncangan" class="form-input">
+                            <option>I</option> <option>II-III</option> <option>IV</option>
+                            <option>V</option> <option>VI</option> <option>VII</option>
+                            <option>VIII</option> <option>IX</option> <option>X+</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                        Visualisasikan Data BMKG
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Input Gempa Manual -->
         <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-xl">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Input Gempa Manual (CSV)</h1>
             <form id="manualGempaForm" class="space-y-4">
@@ -113,7 +150,7 @@
                     </div>
                 </div>
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
                         Submit Gempa Manual
                     </button>
                 </div>
@@ -122,7 +159,7 @@
     </div>
 
     <!-- PAGE 2: DISPLAY INFO -->
-    <div id="page2" class="hidden w-full md:max-w-3xl mx-auto space-y-6">
+    <div id="page2" class="hidden w-full md:max-w-3xl mx-auto space-y-6 transition-all duration-300">
         <div id="report-container" class="bg-white">
             <!-- Peta Backdrop -->
             <div id="map"></div>
@@ -140,7 +177,7 @@
 
                 <div class="flex-grow"></div>
 
-                <!-- Main Info Section - Diperbesar rasio kontainer detail (kanan) -->
+                <!-- Main Info Section -->
                 <div class="grid grid-cols-1 md:grid-cols-[1.0fr_3.0fr] gap-5 items-stretch">
                     <div id="magnitude-container" class="glass-panel flex flex-col items-center justify-center p-6 text-center">
                         <h3 class="font-bold text-lg uppercase tracking-widest opacity-80">Magnitudo</h3>
@@ -198,7 +235,7 @@
         </div>
         
         <!-- Narasi & Action Buttons -->
-        <div class="space-y-4 px-2">
+        <div class="space-y-4 px-2 mt-4">
             <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-lg">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-bold text-xl text-gray-800">Narasi Gempabumi</h3>
@@ -209,11 +246,15 @@
                 <pre id="narasi-gempa" class="whitespace-pre-wrap text-sm text-gray-700 font-sans bg-gray-50 p-4 rounded-xl border border-gray-100"></pre>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-center gap-4 pb-12">
-                <button id="export-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all hover:scale-105">
+            <!-- Tombol Fit Layar (Memfokuskan Viewport) -->
+            <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 pb-12">
+                <button id="toggle-width-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-2xl shadow-xl transition-all hover:scale-105 order-1 sm:order-none">
+                    Fit Layar (Fokus Peta)
+                </button>
+                <button id="export-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all hover:scale-105 order-2 sm:order-none">
                     Export ke JPG (300 PPI)
                 </button>
-                <button id="back-btn" class="bg-gray-800 hover:bg-black text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all hover:scale-105">
+                <button id="back-btn" class="bg-gray-800 hover:bg-black text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all hover:scale-105 order-3 sm:order-none">
                     Kembali ke Form
                 </button>
             </div>
@@ -223,24 +264,27 @@
     <script>
         window.addEventListener('load', () => {
             moment.locale('id');
+
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
+            const bmkgXmlForm = document.getElementById('bmkgXmlForm');
             const manualGempaForm = document.getElementById('manualGempaForm');
             const backBtn = document.getElementById('back-btn');
             const salinBtn = document.getElementById('salin-btn');
             const exportBtn = document.getElementById('export-btn');
+            const toggleWidthBtn = document.getElementById('toggle-width-btn');
             const narasiDisplay = document.getElementById('narasi-gempa');
             
-            // Peta Setup dengan Perbaikan CORS
+            // Peta Setup
             const map = L.map('map', { 
                 zoomControl: false,
                 attributionControl: false,
-                fadeAnimation: false // Menonaktifkan animasi agar tangkapan layar lebih akurat
+                fadeAnimation: false 
             }).setView([-2.548926, 118.0148634], 5);
             
             L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
                 maxZoom: 16,
-                crossOrigin: true // PENTING: Mengizinkan html2canvas mengakses tile gambar
+                crossOrigin: true 
             }).addTo(map);
 
             L.control.attribution({position: 'bottomright'}).addAttribution('ESRI').addTo(map);
@@ -280,10 +324,20 @@
             
             function formatWaktu(isoString, format = 'narasi') {
                 if (!isoString) return 'Waktu Tidak Valid';
-                const wibMoment = moment(isoString);
+                
+                let wibMoment;
+                
+                if (isoString.includes('T') && isoString.includes('Z')) {
+                   wibMoment = moment(isoString).utcOffset('+07:00');
+                } else if (isoString.includes('/')) {
+                   wibMoment = moment.utc(isoString, "YYYY/MM/DD HH:mm:ss.SSS").utcOffset('+07:00');
+                } else {
+                   wibMoment = moment(isoString);
+                }
+
                 if (!wibMoment.isValid()) return 'Waktu Tidak Valid';
+                
                 if (format === 'tampilan') {
-                    // Gunakan span dengan whitespace-nowrap agar tanggal bulan tahun tidak terpisah
                     return `<span class="whitespace-nowrap">${wibMoment.format('DD MMMM YYYY')}</span><br><span class="text-gray-500 font-normal whitespace-nowrap">${wibMoment.format('HH:mm:ss')} WIB</span>`;
                 } else {
                     return wibMoment.format('DD MMMM YYYY HH:mm:ss') + ' WIB';
@@ -294,14 +348,16 @@
                 return moment().utcOffset('+07:00').format('DD/MM/YYYY HH:mm');
             }
             
-            function generateNarasi(data) {
+            function generateNarasi(data, isBmkg = false) {
                 const publishedTime = getCurrentWIBTime();
+                const source = isBmkg ? "BMKG" : "?";
+
                 return `M${parseFloat(data.magnitude).toFixed(1)}
 [PARAMETER AWAL]
 Kedalaman = ${data.kedalaman} Kilometer
 Lokasi = ${data.detailLokasi}
 Waktu = ${formatWaktu(data.waktu, 'narasi')}
-Sumber Gempa = ?
+Sumber Gempa = ${source}
 Guncangan Maksimum = ${data.guncangan} MMI
 Potensi Tsunami = ${data.tsunami}
 Estimasi Korban = ?
@@ -309,7 +365,7 @@ Perkiraan Kerugian = ?
 Rincian Guncangan Gempa (dalam MMI) = 
 Belum Tersedia
 
-Data Oleh ?
+Data Oleh ${source}
 Dipublikasikan pada ${publishedTime} WIB`;
             }
 
@@ -322,33 +378,37 @@ Dipublikasikan pada ${publishedTime} WIB`;
                 return [150000, 300000, 600000];
             }
             
-            function displayGempa(data) {
-                document.getElementById('display-magnitude').textContent = data.magnitude.toFixed(1);
+            function displayGempa(data, isBmkg = false) {
+                document.getElementById('display-magnitude').textContent = parseFloat(data.magnitude).toFixed(1);
                 document.getElementById('display-kedalaman').textContent = `${data.kedalaman} Km`;
                 document.getElementById('display-waktu').innerHTML = formatWaktu(data.waktu, 'tampilan');
                 
-                // FORMAT KOORDINAT: 6.83LU-116.26BT (Tetap rapat sesuai permintaan sebelumnya)
                 const latStr = `${Math.abs(data.lat)}${data.lat >= 0 ? 'LU' : 'LS'}`;
                 const lngStr = `${Math.abs(data.lng)}${data.lng >= 0 ? 'BT' : 'BB'}`;
                 document.getElementById('display-koordinat').textContent = `${latStr}-${lngStr}`;
                 
                 document.getElementById('display-detailLokasi').textContent = data.detailLokasi;
                 document.getElementById('display-guncangan').textContent = `${data.guncangan} MMI`;
-                                const tsunamiDisplay = document.getElementById('display-tsunami');
+                                
+                const tsunamiDisplay = document.getElementById('display-tsunami');
                 tsunamiDisplay.textContent = data.tsunami;
                 tsunamiDisplay.style.backgroundColor = (data.tsunami === 'BERPOTENSI TSUNAMI') ? '#991b1b' : '#15803d';
                 tsunamiDisplay.style.color = '#ffffff';
+                
                 const magnitudeContainer = document.getElementById('magnitude-container');
                 const colors = guncanganColors[data.guncangan] || { bg: 'rgba(220, 220, 220, 0.96)', text: 'text-black' };
                 magnitudeContainer.style.backgroundColor = colors.bg;
-                                const magTextElements = magnitudeContainer.querySelectorAll('h3, p');
+                                
+                const magTextElements = magnitudeContainer.querySelectorAll('h3, p');
                 magTextElements.forEach(el => {
                     el.classList.remove('text-white', 'text-black');
                     el.classList.add(colors.text);
                 });
-                narasiDisplay.textContent = generateNarasi(data);
+                
+                narasiDisplay.textContent = generateNarasi(data, isBmkg);
                 page1.classList.add('hidden');
                 page2.classList.remove('hidden');
+                
                 setTimeout(() => {
                     map.invalidateSize();
                     const targetLatLng = [data.lat, data.lng];
@@ -359,38 +419,184 @@ Dipublikasikan pada ${publishedTime} WIB`;
                         circle.setLatLng(targetLatLng);
                         circle.setRadius(radii[index]);
                     });
-                                        let maxRadius = Math.max(...radii);
+                                        
+                    let maxRadius = Math.max(...radii);
                     let zoomLevel = 11 - Math.log(maxRadius / 1000) / Math.log(2);
                     map.setView(targetLatLng, Math.max(5, Math.min(13, Math.round(zoomLevel))));
                 }, 200);
             }
+
+            // LOGIKA FIT VIEW MENGGUNAKAN VISUAL SCALE (Sempurna untuk Mode Desktop Mobile)
+            let isFitView = false;
+            toggleWidthBtn.addEventListener('click', () => {
+                const page2Container = document.getElementById('page2');
+                
+                if (!isFitView) {
+                    // Hilangkan padding body agar bisa menempel secara penuh ke ujung pinggiran layar
+                    document.body.classList.remove('p-4');
+                    document.body.classList.add('p-0');
+                    
+                    // Trigger reflow/recalculate di browser
+                    void document.body.offsetWidth;
+                    
+                    // Hitung rasio zoom agar lebar visual container menyamai full layout window (cth 980px)
+                    const screenWidth = window.innerWidth;
+                    const containerWidth = page2Container.offsetWidth; 
+                    const scaleRatio = screenWidth / containerWidth;
+                    
+                    // Terapkan fungsi CSS transform untuk melakukan ZOOM secara visual 
+                    // tanpa merusak proporsi lebar asli (width tidak berubah)
+                    page2Container.style.transformOrigin = 'top center';
+                    page2Container.style.transform = `scale(${scaleRatio})`;
+                    
+                    // Karena konten membesar secara visual, tambahkan ruang ekstra ke bawah
+                    // supaya user tetap bisa scrolling sampai tombol fitur selesai/ekspor terbaca penuh
+                    const addedHeight = page2Container.offsetHeight * (scaleRatio - 1);
+                    page2Container.style.marginBottom = addedHeight + 'px';
+                    
+                    document.body.style.overflowX = 'hidden'; // Menghindari pergeseran ke samping
+
+                    // Langsung auto-scroll ke bagian paling atas peta
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                    toggleWidthBtn.textContent = 'Kembalikan View';
+                    toggleWidthBtn.classList.replace('bg-indigo-600', 'bg-orange-600');
+                    toggleWidthBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-orange-700');
+                    isFitView = true;
+                } else {
+                    // Kembalikan ke mode normal
+                    document.body.classList.add('p-4');
+                    document.body.classList.remove('p-0');
+                    
+                    page2Container.style.transform = 'none';
+                    page2Container.style.marginBottom = '0px';
+                    document.body.style.overflowX = 'auto';
+
+                    toggleWidthBtn.textContent = 'Fit Layar (Fokus Peta)';
+                    toggleWidthBtn.classList.replace('bg-orange-600', 'bg-indigo-600');
+                    toggleWidthBtn.classList.replace('hover:bg-orange-700', 'hover:bg-indigo-700');
+                    isFitView = false;
+                }
+                
+                // Beri tahu Leaflet bahwa ada pergerakan / zooming
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 350); 
+            });
+
+            bmkgXmlForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const xmlString = document.getElementById('xmlData').value.trim();
+                
+                if (!xmlString) {
+                    alert('Harap masukkan data XML BMKG.');
+                    return;
+                }
+
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+                    
+                    if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                        throw new Error("Format XML tidak valid.");
+                    }
+
+                    const getVal = (tag) => {
+                        const el = xmlDoc.getElementsByTagName(tag)[0];
+                        return el ? el.textContent : '';
+                    };
+
+                    const mag = parseFloat(getVal("mag"));
+                    const waktu = getVal("waktu");
+                    const lintang = parseFloat(getVal("lintang"));
+                    const bujur = parseFloat(getVal("bujur"));
+                    const dalam = getVal("dalam").replace(/km/i, '').trim();
+                    const area = getVal("area");
+
+                    if (isNaN(mag) || isNaN(lintang) || isNaN(bujur) || !waktu || !area) {
+                         throw new Error("Data XML tidak lengkap. Pastikan tag <mag>, <waktu>, <lintang>, <bujur>, <dalam>, dan <area> ada.");
+                    }
+
+                    const dataVisualisasi = {
+                        magnitude: mag,
+                        kedalaman: parseFloat(dalam),
+                        waktu: waktu,
+                        lat: lintang,
+                        lng: bujur,
+                        detailLokasi: area,
+                        tsunami: document.getElementById('bmkg_tsunami').value,
+                        guncangan: document.getElementById('bmkg_guncangan').value
+                    };
+
+                    displayGempa(dataVisualisasi, true); 
+
+                } catch (error) {
+                    console.error("XML Parse Error:", error);
+                    alert("Terjadi kesalahan saat memproses XML:\n" + error.message);
+                }
+            });
+
+            // LOGIKA PERBAIKAN: PARSING INPUT GEMPA MANUAL (CSV)
             manualGempaForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const formData = new FormData(manualGempaForm);
-                const rawData = Object.fromEntries(formData.entries());
-                const csvLines = rawData.csvData.split('\n');
-                const csvData = csvLines[csvLines.length - 1]; 
-                const parts = csvData.match(/(?:[^\s,"]+|"[^"]*")+/g);
-                if (!parts || parts.length < 6) {
-                    alert('Format CSV tidak valid. Pastikan ada 6 kolom: mag,kedalaman,waktu,lat,long,lokasi');
+                const rawDataText = formData.get('csvData').trim();
+                
+                // Pisahkan berdasarkan baris baru, abaikan baris yang kosong
+                const csvLines = rawDataText.split('\n').filter(line => line.trim() !== '');
+                if (csvLines.length === 0) return;
+                
+                // Ambil baris paling terakhir (berisi data angka) untuk mengabaikan teks Header
+                const lastLine = csvLines[csvLines.length - 1].trim(); 
+                
+                // Pisahkan menggunakan koma (lebih aman jika lokasi menggunakan koma tapi tidak diapit tanda kutip)
+                const parts = lastLine.split(',');
+                
+                if (parts.length < 6) {
+                    alert('Format CSV tidak valid. Pastikan minimal ada 6 kolom yang dipisahkan koma (mag,kedalaman,waktu,lat,long,lokasi)');
                     return;
                 }
+                
                 const data = {
-                    magnitude: parseFloat(parts[0]),
-                    kedalaman: parseFloat(parts[1]),
-                    waktu: parts[2], 
-                    lat: parseFloat(parts[3]),
-                    lng: parseFloat(parts[4]),
-                    detailLokasi: parts.slice(5).join(',').replace(/"/g, ''), 
-                    tsunami: rawData.tsunami,
-                    guncangan: rawData.guncangan
+                    magnitude: parseFloat(parts[0].trim()),
+                    kedalaman: parseFloat(parts[1].trim()),
+                    waktu: parts[2].trim(), 
+                    lat: parseFloat(parts[3].trim()),
+                    lng: parseFloat(parts[4].trim()),
+                    // Gabungkan sisa index ke-5 ke atas menjadi satu string untuk field lokasi
+                    detailLokasi: parts.slice(5).join(',').replace(/"/g, '').trim(), 
+                    tsunami: formData.get('tsunami'),
+                    guncangan: formData.get('guncangan')
                 };
-                displayGempa(data);
+
+                // Validasi tambahan agar tidak lolos saat membaca teks Header
+                if (isNaN(data.magnitude) || isNaN(data.lat) || isNaN(data.lng)) {
+                    alert("Data tidak valid. Pastikan Anda memasukkan urutan angka pada baris terakhir (bukan menyalin teks header/huruf).");
+                    return;
+                }
+
+                displayGempa(data, false); 
             });
-                        backBtn.addEventListener('click', () => {
+                        
+            backBtn.addEventListener('click', () => {
                 page2.classList.add('hidden');
                 page1.classList.remove('hidden');
+                
+                // Pastikan untuk mereset fungsi zoom kembali normal saat klik Kembali ke form
+                if (isFitView) {
+                    isFitView = false;
+                    document.body.classList.add('p-4');
+                    document.body.classList.remove('p-0');
+                    const page2Container = document.getElementById('page2');
+                    page2Container.style.transform = 'none';
+                    page2Container.style.marginBottom = '0px';
+                    document.body.style.overflowX = 'auto';
+                    toggleWidthBtn.textContent = 'Fit Layar (Fokus Peta)';
+                    toggleWidthBtn.classList.replace('bg-orange-600', 'bg-indigo-600');
+                    toggleWidthBtn.classList.replace('hover:bg-orange-700', 'hover:bg-indigo-700');
+                }
             });
+            
             salinBtn.addEventListener('click', () => {
                 const narasiText = narasiDisplay.textContent;
                 const textArea = document.createElement('textarea');
@@ -407,46 +613,64 @@ Dipublikasikan pada ${publishedTime} WIB`;
                     salinBtn.disabled = false;
                 }, 2000);
             });
-            // PERBAIKAN LOGIKA EXPORT
+            
             exportBtn.addEventListener('click', () => {
                 const reportElement = document.getElementById('report-container');
+                const page2Container = document.getElementById('page2');
                 const originalText = exportBtn.textContent;
                 exportBtn.textContent = "Mengekspor...";
                 exportBtn.disabled = true;
-                // Simulasi 300 PPI: Scale 3.125
+                
+                // SANGAT PENTING: Kita perlu mematikan visual scale ini sejenak
+                // agar html2canvas dapat mendownload gambar resolusi aslinya yang tidak rusak/terpotong
+                const wasFitView = isFitView;
+                if (wasFitView) {
+                    page2Container.style.transform = 'none';
+                    page2Container.style.marginBottom = '0px';
+                }
+
                 const scale = 3.125;
-                // Tunggu sebentar agar render peta stabil
+                
                 setTimeout(() => {
                     html2canvas(reportElement, {
                         scale: scale,
                         useCORS: true, 
-                        allowTaint: false, // Diset false agar toDataURL tidak error
+                        allowTaint: false,
                         backgroundColor: "#ffffff",
                         logging: false,
                         scrollX: 0,
-                        scrollY: -window.scrollY // Memperbaiki posisi jika halaman di-scroll
+                        scrollY: -window.scrollY
                     }).then(canvas => {
+                        // Nyalakan kembali fit view layarnya
+                        if (wasFitView) {
+                            const screenWidth = window.innerWidth;
+                            const containerWidth = page2Container.offsetWidth; 
+                            const scaleRatio = screenWidth / containerWidth;
+                            page2Container.style.transform = `scale(${scaleRatio})`;
+                            const addedHeight = page2Container.offsetHeight * (scaleRatio - 1);
+                            page2Container.style.marginBottom = addedHeight + 'px';
+                        }
+
                         try {
                             const link = document.createElement('a');
                             const timestamp = moment().format('YYYYMMDD_HHmmss');
                             link.download = `Laporan_Gempa_${timestamp}.jpg`;
-                            link.href = canvas.toDataURL('image/jpeg', 0.95); // Kualitas Tinggi
+                            link.href = canvas.toDataURL('image/jpeg', 0.95);
                             link.click();
                         } catch (e) {
                             console.error("Gagal membuat data gambar:", e);
                             alert("Ekspor gagal karena masalah keamanan gambar eksternal (CORS).");
                         }
-                                                exportBtn.textContent = originalText;
+                        exportBtn.textContent = originalText;
                         exportBtn.disabled = false;
                     }).catch(err => {
                         console.error("Export Error:", err);
                         exportBtn.textContent = "Gagal Mengekspor";
                         exportBtn.disabled = false;
                     });
-                }, 500);
+                }, 500); // Tunggu setengah detik supaya render kembali utuh sejenak 
             });
         });
     </script>
 </body>
 </html>
-
